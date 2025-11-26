@@ -7,14 +7,56 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
-### Planeado para v2.2.0
+### Planeado para v2.3.0
 
 - [ ] Soporte para Azure SQL Managed Instance
 - [ ] Análisis de Query Store
 - [ ] Comparación de múltiples benchmarks
 - [ ] API REST (FastAPI)
 - [ ] Dashboard web en tiempo real
-- [ ] PowerShell version del offline tool
+
+## [2.2.0] - 2025-01-26
+
+### 🔥 Critical Update: Windows Native Support
+
+**BREAKING CHANGE**: Offline tool ahora recomienda PowerShell para Windows SQL Servers.
+
+#### Added - PowerShell Edition (RECOMENDADO para Windows)
+- **Monitor-SQLWorkload.ps1**: Monitor principal nativo PowerShell (~600 líneas)
+  - Sin dependencias externas (solo módulo SqlServer auto-instalable)
+  - Compatible Windows Server 2012 R2+ sin Python
+  - Basado en código 100% probado (SQLMonitoring_OnPremises_v2)
+  - Checkpoint recovery automático cada 60 minutos
+  - Mismo formato JSON v2.1 (compatible con Python version)
+- **INSTALL.ps1**: Instalador PowerShell con 8 checks automáticos (~400 líneas)
+  - PowerShell version (5.1+/7+)
+  - SqlServer module installation
+  - SQL connectivity & permissions
+  - Query file & execution test
+  - Disk space validation
+- **Check-MonitoringStatus.ps1**: Status checker con watch mode (~150 líneas)
+- **README-PowerShell.md**: Documentación completa Windows (~500 líneas)
+  - Quick start en 4 pasos
+  - Troubleshooting específico Windows
+  - Comparación PowerShell vs Python
+  - Integración con toolkit principal
+
+#### Changed
+- **README.md Offline Tool**: Prioriza PowerShell Edition para Windows
+- **Arquitectura multi-plataforma documentada**: PowerShell (Windows) + Python (Linux)
+- Recomendación explícita: "La mayoría de servidores SQL Server son Windows sin Python"
+
+#### Fixed
+- **Critical Issue**: Herramienta offline ahora funciona en entornos típicos Windows Server
+- Python dependency blocker eliminado para uso case principal (Windows SQL Servers)
+
+#### Technical Details (PowerShell Edition)
+- 3 scripts PowerShell principales (~1,200 líneas total)
+- Reutiliza workload-sample-query.sql (18 métricas)
+- Módulo SqlServer como única dependencia (auto-instalable)
+- Instalación completa < 30 segundos en Windows
+- 100% nativo Windows (sin WSL, Python, Bash)
+- JSON output idéntico a Python version (interoperabilidad total)
 
 ## [2.1.0] - 2025-01-26
 

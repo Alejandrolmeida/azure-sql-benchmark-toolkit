@@ -21,36 +21,50 @@ Herramienta standalone para monitorización de SQL Server en sistemas **sin cone
 
 ## 🚀 Quick Start
 
-### 1. Instalación
+### ⭐ Para Servidores Windows SQL Server (RECOMENDADO)
+
+**La mayoría de servidores SQL Server son Windows sin Python instalado.** Usa la **PowerShell Edition** (sin dependencias externas):
+
+```powershell
+# 1. Descargar y extraer en servidor SQL
+cd C:\SQLBenchmark\offline-benchmark
+
+# 2. Ejecutar instalador PowerShell (30 segundos)
+.\INSTALL.ps1
+
+# 3. Test rápido (15 minutos)
+.\scripts\Monitor-SQLWorkload.ps1 -Duration 15 -Interval 60
+
+# 4. Transferir JSON a máquina Linux con toolkit completo
+# Archivo generado: sql_workload_monitor.json
+```
+
+**📚 Documentación completa:** [README-PowerShell.md](README-PowerShell.md)
+
+---
+
+### 🐍 Para Servidores Linux con Python
+
+Si tu SQL Server corre en Linux o tienes Python 3.8+ instalado:
 
 ```bash
-# Navegar al directorio offline-benchmark
+# 1. Navegar al directorio offline-benchmark
 cd tools/offline-benchmark
 
-# Ejecutar instalador (valida dependencias, conectividad, permisos)
-python INSTALL.py
+# 2. Ejecutar instalador (valida dependencias, conectividad, permisos)
+python3 INSTALL.py
+
+# 3. Test rápido (15 minutos)
+python3 scripts/monitor_sql_workload.py --server localhost --duration 15 --interval 60
+
+# 4. Monitorización producción (24 horas)
+python3 scripts/monitor_sql_workload.py --server localhost --duration 1440 --interval 120
 ```
 
 **Con SQL Authentication:**
 ```bash
-python INSTALL.py --server MYSERVER\SQL2022 --username sa --password YourPassword
+python3 INSTALL.py --server MYSERVER --username sa --password YourPassword
 ```
-
-### 2. Test Rápido (15 minutos)
-
-```bash
-python scripts/monitor_sql_workload.py --server . --duration 15 --interval 60
-```
-
-Esto recolecta 15 muestras (1 por minuto) y genera `sql_workload_monitor.json`.
-
-### 3. Monitorización Producción (24 horas)
-
-```bash
-python scripts/monitor_sql_workload.py --server . --duration 1440 --interval 120
-```
-
-Recolecta 720 muestras (1 cada 2 minutos) durante 24 horas.
 
 ---
 
