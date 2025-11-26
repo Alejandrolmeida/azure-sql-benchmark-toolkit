@@ -1,0 +1,3035 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Operativa: Migración SQL Server a Azure</title>
+    
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+    
+    <!-- Mermaid.js for Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    
+    <style>
+        /* ============================================
+           CSS Variables & Reset
+        ============================================ */
+        :root {
+            --azure-blue: #0078D4;
+            --azure-dark: #005A9E;
+            --green: #28a745;
+            --orange: #fd7e14;
+            --red: #dc3545;
+            --gray-100: #f8f9fa;
+            --gray-300: #dee2e6;
+            --gray-600: #6c757d;
+            --gray-800: #343a40;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        /* ============================================
+           Layout Structure
+        ============================================ */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* ============================================
+           Header
+        ============================================ */
+        header {
+            background: linear-gradient(135deg, var(--azure-blue), var(--azure-dark));
+            color: white;
+            padding: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        /* ============================================
+           Sidebar Navigation
+        ============================================ */
+        .sidebar {
+            width: 280px;
+            background: white;
+            padding: 2rem 1rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+        }
+        
+        .sidebar h3 {
+            color: var(--azure-blue);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+        }
+        
+        .sidebar li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar a {
+            text-decoration: none;
+            color: var(--gray-800);
+            padding: 0.5rem;
+            display: block;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .sidebar a:hover {
+            background: var(--gray-100);
+            color: var(--azure-blue);
+            padding-left: 1rem;
+        }
+        
+        /* ============================================
+           Main Content
+        ============================================ */
+        .content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+        }
+        
+        section {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        section h2 {
+            color: var(--azure-blue);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--azure-blue);
+        }
+        
+        section h3 {
+            color: var(--azure-dark);
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        section h4 {
+            color: var(--gray-800);
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        /* ============================================
+           Tables
+        ============================================ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        thead {
+            background: linear-gradient(135deg, var(--azure-blue), var(--azure-dark));
+            color: white;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-300);
+        }
+        
+        th {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+        
+        tbody tr:hover {
+            background: var(--gray-100);
+        }
+        
+        /* ============================================
+           Alerts & Info Boxes
+        ============================================ */
+        .alert {
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            border-left: 5px solid;
+        }
+        
+        .alert-info {
+            background: #e7f3ff;
+            border-left-color: var(--azure-blue);
+            color: #004085;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border-left-color: var(--green);
+            color: #155724;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border-left-color: var(--orange);
+            color: #856404;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            border-left-color: var(--red);
+            color: #721c24;
+        }
+        
+        /* ============================================
+           Badges
+        ============================================ */
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        
+        .badge-success {
+            background: var(--green);
+            color: white;
+        }
+        
+        .badge-warning {
+            background: var(--orange);
+            color: white;
+        }
+        
+        .badge-info {
+            background: var(--azure-blue);
+            color: white;
+        }
+        
+        /* ============================================
+           Code Blocks (Prism.js enhancement)
+        ============================================ */
+        pre {
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        pre code {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .code-header {
+            background: var(--gray-800);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .copy-btn {
+            background: var(--azure-blue);
+            color: white;
+            border: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: var(--azure-dark);
+        }
+        
+        /* ============================================
+           Step-by-Step Instructions
+        ============================================ */
+        .steps {
+            counter-reset: step-counter;
+            list-style: none;
+        }
+        
+        .steps li {
+            counter-increment: step-counter;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            background: var(--gray-100);
+            border-radius: 8px;
+            border-left: 5px solid var(--azure-blue);
+            position: relative;
+            padding-left: 4rem;
+        }
+        
+        .steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--azure-blue);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        /* ============================================
+           Mermaid Diagram Container
+        ============================================ */
+        .mermaid-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+        
+        /* ============================================
+           Grid Layouts
+        ============================================ */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        /* ============================================
+           Footer
+        ============================================ */
+        footer {
+            background: var(--gray-800);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+        
+        footer p {
+            margin: 0.5rem 0;
+        }
+        
+        /* ============================================
+           Responsive Design
+        ============================================ */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+            }
+            
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* ============================================
+           Print Styles
+        ============================================ */
+        @media print {
+            .sidebar, .copy-btn, footer {
+                display: none;
+            }
+            
+            body {
+                background: white;
+            }
+            
+            section {
+                page-break-inside: avoid;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🚀 Guía Operativa: Migración SQL Server a Azure</h1>
+        <p>Procedimientos paso a paso con Azure Migrate, Database Migration Service y Bicep IaC</p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.8;">
+            <strong>Servidor:</strong> SQL Server 2025 Enterprise | <strong>Target:</strong> Azure VM Standard_E16ds_v5 | 
+            <strong>Estrategia:</strong> Lift & Shift con BYOL
+        </p>
+    </header>
+    
+    <div class="container">
+        <aside class="sidebar">
+            <h3>📚 Índice de Contenidos</h3>
+            <ul>
+                <li><a href="#introduccion">🎯 Introducción</a></li>
+                <li><a href="#prerequisites">📋 Prerequisites</a></li>
+                <li><a href="#azure-migrate">🔍 Azure Migrate Setup</a></li>
+                <li><a href="#dms-online">🔄 DMS Migration Online</a></li>
+                <li><a href="#dms-offline">💾 DMS Migration Offline</a></li>
+                <li><a href="#bicep-infrastructure">☁️ Bicep Infrastructure</a></li>
+                <li><a href="#timeline">📅 Timeline 6 Semanas</a></li>
+                <li><a href="#validation">✅ Testing & Validation</a></li>
+                <li><a href="#rollback">🔄 Rollback Plan</a></li>
+                <li><a href="#troubleshooting">🛠️ Troubleshooting</a></li>
+            </ul>
+        </aside>
+        
+        <main class="content">
+            <section id="introduccion">
+                <h2>🎯 Introducción</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    Esta guía proporciona instrucciones detalladas para migrar SQL Server 2025 Enterprise on-premises 
+                    a Azure Virtual Machine IaaS, utilizando las herramientas nativas de Azure y best practices.
+                </p>
+                
+                <h3>📊 Resumen de la Migración</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aspecto</th>
+                            <th>Origen (On-Premises)</th>
+                            <th>Destino (Azure)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>SQL Server Version</strong></td>
+                            <td>SQL Server 2025 Enterprise</td>
+                            <td>SQL Server 2025 Enterprise (BYOL)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hardware</strong></td>
+                            <td>12 cores físicos @ 100% CPU<br>32 GB RAM (19 GB usado)</td>
+                            <td>Standard_E16ds_v5<br>16 vCPUs, 128 GB RAM</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Almacenamiento</strong></td>
+                            <td>Local SSD<br>Peak IOPS: 4607</td>
+                            <td>Premium SSD P20 (Data)<br>Premium SSD P15 (Log)<br>Premium SSD P10 (OS)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Estrategia</strong></td>
+                            <td colspan="2">Lift & Shift (IaaS) con replicación online DMS</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Downtime Target</strong></td>
+                            <td colspan="2">< 4 horas (cutover window)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Networking</strong></td>
+                            <td>On-Premises VPN</td>
+                            <td>Azure Bastion + Private Endpoints</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>🎯 Objetivos de la Migración</h3>
+                <div class="grid-2">
+                    <div class="alert alert-success">
+                        <h4>✅ Objetivos Técnicos</h4>
+                        <ul>
+                            <li>Zero data loss (online replication)</li>
+                            <li>Downtime < 4 horas</li>
+                            <li>100% compatibilidad funcional</li>
+                            <li>Performance igual o superior</li>
+                            <li>Backup & DR automatizados</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h4>💼 Objetivos de Negocio</h4>
+                        <ul>
+                            <li>Reducción 25% costo TCO 3 años</li>
+                            <li>Mejorar escalabilidad cloud-native</li>
+                            <li>Reducir overhead operativo</li>
+                            <li>Habilitar geo-redundancia futura</li>
+                            <li>Cumplir compliance requirements</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <strong>⚠️ Consideraciones Importantes:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Esta migración utiliza <strong>BYOL (Bring Your Own License)</strong>. Verificar que Software Assurance esté activo.</li>
+                        <li>Se requiere conectividad Site-to-Site VPN o ExpressRoute durante la migración.</li>
+                        <li>El servidor origen debe permanecer online durante replicación (DMS online mode).</li>
+                        <li>Testing exhaustivo en entorno UAT antes de producción es <strong>obligatorio</strong>.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="prerequisites">
+                <h2>📋 Prerequisites</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    Requisitos técnicos y preparativos necesarios antes de iniciar la migración.
+                </p>
+                
+                <h3>☁️ Azure Subscriptions & Permissions</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Requisito</th>
+                            <th>Detalle</th>
+                            <th>Verificación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Azure Subscription</strong></td>
+                            <td>Subscription activa con crédito suficiente</td>
+                            <td><code>az account show</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Permisos RBAC</strong></td>
+                            <td>Contributor o Owner en subscription</td>
+                            <td><code>az role assignment list --assignee &lt;user&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Resource Providers</strong></td>
+                            <td>Microsoft.Migrate, Microsoft.SqlVirtualMachine registrados</td>
+                            <td><code>az provider show -n Microsoft.Migrate</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Quotas</strong></td>
+                            <td>16 vCPUs disponibles en región target</td>
+                            <td>Azure Portal → Subscriptions → Usage + quotas</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>🖥️ On-Premises SQL Server</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Requisito</th>
+                            <th>Detalle</th>
+                            <th>Comando Verificación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>SQL Server Version</strong></td>
+                            <td>SQL Server 2016+ (2025 en este caso)</td>
+                            <td><code>SELECT @@VERSION</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Backup Strategy</strong></td>
+                            <td>Full backup disponible (< 24h antigüedad)</td>
+                            <td><code>SELECT * FROM msdb.dbo.backupset ORDER BY backup_start_date DESC</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Recovery Model</strong></td>
+                            <td>Full (requerido para replicación online)</td>
+                            <td><code>SELECT name, recovery_model_desc FROM sys.databases</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TCP/IP Habilitado</strong></td>
+                            <td>SQL Server Network Configuration</td>
+                            <td>SQL Server Configuration Manager</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Firewall</strong></td>
+                            <td>Puerto 1433 accesible desde Azure</td>
+                            <td><code>Test-NetConnection -ComputerName &lt;server&gt; -Port 1433</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>🌐 Networking Requirements</h3>
+                <div class="grid-2">
+                    <div class="alert alert-info">
+                        <h4>Conectividad Requerida</h4>
+                        <ul>
+                            <li><strong>Site-to-Site VPN</strong> (mínimo 100 Mbps) o</li>
+                            <li><strong>ExpressRoute</strong> (recomendado para prod)</li>
+                            <li>Latencia < 50ms entre on-prem y Azure</li>
+                            <li>Ancho de banda: 2 GB DB = ~30 minutos @ 100 Mbps</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h4>Puertos y Servicios</h4>
+                        <ul>
+                            <li><strong>TCP 1433</strong>: SQL Server</li>
+                            <li><strong>TCP 443</strong>: Azure Management</li>
+                            <li><strong>TCP 3389</strong>: RDP (temporal para setup)</li>
+                            <li><strong>DNS</strong>: Resolución de nombres Azure</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3>🔐 Licenciamiento & Compliance</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aspecto</th>
+                            <th>Requisito</th>
+                            <th>Documentación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Software Assurance</strong></td>
+                            <td>Activo para BYOL (Azure Hybrid Benefit)</td>
+                            <td>Contrato de licencias Microsoft</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Licencias SQL Server</strong></td>
+                            <td>Enterprise Edition para migración</td>
+                            <td>Product Keys disponibles</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Windows Server</strong></td>
+                            <td>Datacenter Edition con SA</td>
+                            <td>Licenciamiento por núcleo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Compliance</strong></td>
+                            <td>Aprobación data residency (región UE)</td>
+                            <td>Security & Compliance review</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>🛠️ Herramientas y Software</h3>
+                <ul class="steps">
+                    <li>
+                        <strong>Azure CLI</strong> (v2.50+)<br>
+                        Instalación: <code>https://aka.ms/installazurecliwindows</code>
+                    </li>
+                    <li>
+                        <strong>Azure PowerShell Module</strong> (v10.0+)<br>
+                        <code>Install-Module -Name Az -Repository PSGallery -Force</code>
+                    </li>
+                    <li>
+                        <strong>SQL Server Management Studio</strong> (SSMS 19+)<br>
+                        Descarga: <code>https://aka.ms/ssmsfullsetup</code>
+                    </li>
+                    <li>
+                        <strong>Azure Data Studio</strong> (opcional)<br>
+                        Para Azure SQL assessment y migration extensions
+                    </li>
+                    <li>
+                        <strong>Data Migration Assistant</strong> (DMA v5.7+)<br>
+                        Para compatibility assessment pre-migration
+                    </li>
+                </ul>
+                
+                <div class="alert alert-success">
+                    <strong>✅ Checklist Pre-Migration:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li>☑️ Azure subscription configurada con permisos adecuados</li>
+                        <li>☑️ Conectividad VPN/ExpressRoute validada (ping < 50ms)</li>
+                        <li>☑️ SQL Server en Full Recovery Model</li>
+                        <li>☑️ Backup completo reciente (< 24h)</li>
+                        <li>☑️ Software Assurance verificado para BYOL</li>
+                        <li>☑️ Herramientas Azure CLI, PowerShell, SSMS instaladas</li>
+                        <li>☑️ Resource providers registrados en subscription</li>
+                        <li>☑️ Firewall rules configuradas para acceso Azure</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="azure-migrate">
+                <h2>🔍 Azure Migrate Setup</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    Azure Migrate proporciona discovery y assessment automatizado de servidores on-premises, 
+                    incluyendo inventario de SQL Server, análisis de performance y recomendaciones de sizing.
+                </p>
+                
+                <h3>Paso 1: Crear Azure Migrate Project</h3>
+                
+                <div class="code-header">
+                    <span>PowerShell - Crear Migrate Project</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Autenticación en Azure
+Connect-AzAccount
+
+# Seleccionar subscription
+$subscriptionId = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+Set-AzContext -SubscriptionId $subscriptionId
+
+# Variables del proyecto
+$resourceGroupName = "rg-migration-project"
+$location = "westeurope"
+$projectName = "sqlserver-migrate-project"
+
+# Crear Resource Group
+New-AzResourceGroup -Name $resourceGroupName -Location $location
+
+# Crear Azure Migrate Project
+$migrateProject = New-AzMigrateProject `
+    -ResourceGroupName $resourceGroupName `
+    -Name $projectName `
+    -Location $location
+
+Write-Host "✅ Azure Migrate Project creado: $($migrateProject.Name)" -ForegroundColor Green
+Write-Host "Project ID: $($migrateProject.Id)" -ForegroundColor Cyan</code></pre>
+                </div>
+                
+                <h3>Paso 2: Descargar y Configurar Azure Migrate Appliance</h3>
+                
+                <ul class="steps">
+                    <li>
+                        <strong>Descargar el Appliance OVA/VHD</strong><br>
+                        Azure Portal → Azure Migrate → Servers, databases and web apps → Discover → 
+                        Download appliance (VMware OVA o Hyper-V VHD según tu entorno)
+                    </li>
+                    <li>
+                        <strong>Desplegar en Hypervisor Local</strong><br>
+                        Requisitos: 8 vCPUs, 16 GB RAM, 80 GB disk<br>
+                        Importar OVA/VHD en VMware vSphere o Hyper-V Manager
+                    </li>
+                    <li>
+                        <strong>Configuración Inicial del Appliance</strong><br>
+                        Acceder vía browser: <code>https://&lt;appliance-ip&gt;:44368</code><br>
+                        Aceptar terms & conditions → Set administrator password
+                    </li>
+                    <li>
+                        <strong>Registrar Appliance con Azure</strong><br>
+                        Generar key desde Azure Portal → Migrate Project → Appliances → Generate key<br>
+                        Copiar key y pegar en appliance setup wizard
+                    </li>
+                </ul>
+                
+                <div class="code-header">
+                    <span>PowerShell - Generar Appliance Registration Key</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Generar key para registrar appliance
+$applianceName = "migrate-appliance-01"
+
+$registrationKey = New-AzMigrateServerDiscovery `
+    -ResourceGroupName $resourceGroupName `
+    -ProjectName $projectName `
+    -ApplianceName $applianceName `
+    -Scenario "Agentless"
+
+Write-Host "🔑 Registration Key (copiar en appliance):" -ForegroundColor Yellow
+Write-Host $registrationKey.Key -ForegroundColor Cyan
+
+# El key es válido por 30 días</code></pre>
+                </div>
+                
+                <h3>Paso 3: Configurar Credentials para Discovery</h3>
+                
+                <div class="alert alert-warning">
+                    <strong>⚠️ Importante:</strong> El appliance necesita credenciales con permisos suficientes para:
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Windows: Account con permisos de administrator local (WMI, RPC)</li>
+                        <li>SQL Server: sysadmin role o VIEW SERVER STATE permission</li>
+                    </ul>
+                </div>
+                
+                <ul class="steps">
+                    <li>
+                        <strong>Credential para Windows Servers</strong><br>
+                        Appliance UI → Manage credentials → Add credentials<br>
+                        Type: Windows | Username: <code>DOMAIN\AdminUser</code> | Password: ***
+                    </li>
+                    <li>
+                        <strong>Credential para SQL Server</strong><br>
+                        Type: SQL Server authentication | Username: <code>sa</code> (o cuenta sysadmin)<br>
+                        <em>Alternativa</em>: Windows authentication (preferred)
+                    </li>
+                </ul>
+                
+                <div class="code-header">
+                    <span>SQL - Crear SQL User para Discovery (opción segura)</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-sql">-- Crear login para Azure Migrate discovery
+CREATE LOGIN [AzureMigrateDiscovery] WITH PASSWORD = 'SecureP@ssw0rd!';
+
+-- Asignar permisos mínimos necesarios
+GRANT VIEW SERVER STATE TO [AzureMigrateDiscovery];
+GRANT VIEW ANY DEFINITION TO [AzureMigrateDiscovery];
+
+-- Para cada base de datos a evaluar
+USE [YourDatabase];
+CREATE USER [AzureMigrateDiscovery] FOR LOGIN [AzureMigrateDiscovery];
+ALTER ROLE db_datareader ADD MEMBER [AzureMigrateDiscovery];
+
+-- Verificar permisos
+SELECT 
+    pr.principal_id,
+    pr.name,
+    pr.type_desc,
+    pe.state_desc,
+    pe.permission_name
+FROM sys.server_principals AS pr
+INNER JOIN sys.server_permissions AS pe ON pe.grantee_principal_id = pr.principal_id
+WHERE pr.name = 'AzureMigrateDiscovery';</code></pre>
+                </div>
+                
+                <h3>Paso 4: Iniciar Discovery de Servidores</h3>
+                
+                <ul class="steps">
+                    <li>
+                        <strong>Añadir vCenter/Hyper-V Hosts</strong><br>
+                        Appliance UI → Manage sources → Add vCenter Server<br>
+                        vCenter IP/FQDN: <code>vcenter.company.local</code> | Port: 443<br>
+                        Credentials: vCenter read-only account
+                    </li>
+                    <li>
+                        <strong>Iniciar Discovery</strong><br>
+                        Click "Start discovery" → Duración: ~15-30 minutos<br>
+                        El appliance recopila: hardware specs, OS version, installed software, network config
+                    </li>
+                    <li>
+                        <strong>Validar Discovery en Azure Portal</strong><br>
+                        Azure Migrate → Servers, databases and web apps → Discovered servers<br>
+                        Verificar que el servidor SQL aparece en la lista
+                    </li>
+                </ul>
+                
+                <div class="code-header">
+                    <span>PowerShell - Verificar Estado de Discovery</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Obtener lista de servidores descubiertos
+$discoveredServers = Get-AzMigrateDiscoveredServer `
+    -ResourceGroupName $resourceGroupName `
+    -ProjectName $projectName
+
+# Filtrar SQL Servers
+$sqlServers = $discoveredServers | Where-Object { 
+    $_.DiscoveredServerProperties.SqlInstances.Count -gt 0 
+}
+
+# Mostrar información
+foreach ($server in $sqlServers) {
+    Write-Host "═══════════════════════════════════════" -ForegroundColor Cyan
+    Write-Host "🖥️  Servidor: $($server.DisplayName)" -ForegroundColor Green
+    Write-Host "OS: $($server.OperatingSystemName) $($server.OperatingSystemVersion)"
+    Write-Host "Cores: $($server.NumberOfCores) | RAM: $($server.AllocatedMemoryInMB) MB"
+    
+    foreach ($sqlInstance in $server.DiscoveredServerProperties.SqlInstances) {
+        Write-Host "   🗄️  SQL Instance: $($sqlInstance.Name)" -ForegroundColor Yellow
+        Write-Host "   Edition: $($sqlInstance.Edition) | Version: $($sqlInstance.Version)"
+        Write-Host "   Databases: $($sqlInstance.NumberOfDatabases)"
+    }
+}</code></pre>
+                </div>
+                
+                <h3>Paso 5: Ejecutar SQL Assessment</h3>
+                
+                <div class="alert alert-info">
+                    <strong>💡 SQL Assessment:</strong> Evalúa compatibilidad y sizing para Azure SQL Database, 
+                    SQL Managed Instance y SQL Server on Azure VM. Incluye:
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Compatibility issues (deprecated features, unsupported syntax)</li>
+                        <li>Azure SKU recommendations (vCores, RAM, IOPS)</li>
+                        <li>Cost estimates per target option</li>
+                        <li>Performance baseline (CPU, RAM, IOPS históricos)</li>
+                    </ul>
+                </div>
+                
+                <ul class="steps">
+                    <li>
+                        <strong>Crear Assessment Group</strong><br>
+                        Azure Migrate → Servers, databases and web apps → Assessments → Create assessment<br>
+                        Type: <strong>Azure SQL</strong> | Select discovered SQL Servers
+                    </li>
+                    <li>
+                        <strong>Configurar Assessment Settings</strong><br>
+                        Target location: West Europe<br>
+                        Environment type: Production<br>
+                        Offer: Pay-As-You-Go (or Reserved Instance)<br>
+                        Currency: EUR
+                    </li>
+                    <li>
+                        <strong>Ejecutar Assessment</strong><br>
+                        Click "Create assessment" → Duración: ~5-10 minutos<br>
+                        Azure analiza workload patterns y genera recomendaciones
+                    </li>
+                </ul>
+                
+                <div class="code-header">
+                    <span>PowerShell - Crear y Ejecutar SQL Assessment</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Crear Assessment para SQL Server
+$assessmentName = "sqlserver-assessment-001"
+$targetLocation = "westeurope"
+
+# Obtener IDs de servidores SQL descubiertos
+$sqlServerIds = $sqlServers | Select-Object -ExpandProperty Id
+
+# Configuración del assessment
+$assessmentProperties = @{
+    AzureLocation = $targetLocation
+    AzureOfferCode = "PAYG"  # o "MSAZR0146P" para DevTest
+    Currency = "EUR"
+    SizingCriterion = "PerformanceBased"  # o "AsOnPremises"
+    PerformanceHistoryDuration = "OneMonth"
+    Percentile = "Percentile95"  # P95 para sizing
+    ComfortFactor = 1.2  # 20% headroom
+}
+
+# Crear assessment
+$assessment = New-AzMigrateSqlAssessment `
+    -ResourceGroupName $resourceGroupName `
+    -ProjectName $projectName `
+    -Name $assessmentName `
+    -DiscoveredEntityId $sqlServerIds `
+    -Property $assessmentProperties
+
+Write-Host "✅ Assessment creado: $assessmentName" -ForegroundColor Green
+Write-Host "Esperando resultados (esto puede tardar 5-10 minutos)..." -ForegroundColor Yellow
+
+# Esperar a que el assessment complete
+Start-Sleep -Seconds 300
+
+# Obtener resultados
+$assessmentResults = Get-AzMigrateSqlAssessment `
+    -ResourceGroupName $resourceGroupName `
+    -ProjectName $projectName `
+    -Name $assessmentName
+
+Write-Host "`n📊 Resultados del Assessment:" -ForegroundColor Cyan
+Write-Host "═══════════════════════════════════════" -ForegroundColor Cyan</code></pre>
+                </div>
+                
+                <h3>Paso 6: Analizar Recomendaciones</h3>
+                
+                <div class="code-header">
+                    <span>PowerShell - Obtener Recomendaciones de Sizing</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Obtener recomendaciones detalladas
+$assessmentId = $assessment.Id
+
+$recommendations = Get-AzMigrateSqlAssessmentRecommendation `
+    -AssessmentId $assessmentId
+
+foreach ($rec in $recommendations) {
+    Write-Host "`n🎯 Recomendación para: $($rec.MachineName)" -ForegroundColor Green
+    Write-Host "   SQL Instance: $($rec.SqlInstanceName)"
+    
+    # Recomendación Azure SQL Database
+    if ($rec.AzureSqlDatabaseRecommendation) {
+        Write-Host "`n   ☁️  Azure SQL Database (PaaS):" -ForegroundColor Cyan
+        Write-Host "      Tier: $($rec.AzureSqlDatabaseRecommendation.ServiceTier)"
+        Write-Host "      vCores: $($rec.AzureSqlDatabaseRecommendation.VCores)"
+        Write-Host "      Storage: $($rec.AzureSqlDatabaseRecommendation.StorageInGB) GB"
+        Write-Host "      Monthly Cost: €$($rec.AzureSqlDatabaseRecommendation.MonthlyComputeCost)"
+        Write-Host "      Compatibility: $($rec.AzureSqlDatabaseRecommendation.CompatibilityLevel)%"
+    }
+    
+    # Recomendación Azure VM (IaaS)
+    if ($rec.AzureVmRecommendation) {
+        Write-Host "`n   🖥️  Azure VM (IaaS):" -ForegroundColor Yellow
+        Write-Host "      SKU: $($rec.AzureVmRecommendation.VmSize)"
+        Write-Host "      vCPUs: $($rec.AzureVmRecommendation.NumberOfCores)"
+        Write-Host "      RAM: $($rec.AzureVmRecommendation.MemoryInGB) GB"
+        Write-Host "      Disk Type: $($rec.AzureVmRecommendation.DiskType)"
+        Write-Host "      Monthly Cost: €$($rec.AzureVmRecommendation.MonthlyComputeCost)"
+        Write-Host "      ✅ Recommended: BYOL compatible" -ForegroundColor Green
+    }
+    
+    # Recomendación SQL Managed Instance
+    if ($rec.SqlManagedInstanceRecommendation) {
+        Write-Host "`n   🔷 Azure SQL Managed Instance:" -ForegroundColor Magenta
+        Write-Host "      Tier: $($rec.SqlManagedInstanceRecommendation.ServiceTier)"
+        Write-Host "      vCores: $($rec.SqlManagedInstanceRecommendation.VCores)"
+        Write-Host "      Storage: $($rec.SqlManagedInstanceRecommendation.StorageInGB) GB"
+        Write-Host "      Monthly Cost: €$($rec.SqlManagedInstanceRecommendation.MonthlyComputeCost)"
+    }
+    
+    # Issues de compatibilidad
+    if ($rec.CompatibilityIssues.Count -gt 0) {
+        Write-Host "`n   ⚠️  Compatibility Issues:" -ForegroundColor Red
+        foreach ($issue in $rec.CompatibilityIssues) {
+            Write-Host "      - $($issue.ImpactedObject): $($issue.Description)"
+        }
+    }
+}
+
+# Exportar resultados a CSV
+$recommendations | Export-Csv -Path "azure-migrate-recommendations.csv" -NoTypeInformation
+Write-Host "`n✅ Resultados exportados a: azure-migrate-recommendations.csv" -ForegroundColor Green</code></pre>
+                </div>
+                
+                <h3>📊 Interpretación de Resultados</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Valor Detectado (On-Prem)</th>
+                            <th>Recomendación Azure</th>
+                            <th>Justificación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>CPU Cores</strong></td>
+                            <td>12 cores @ 100% utilization</td>
+                            <td>16 vCores (Standard_E16ds_v5)</td>
+                            <td>33% headroom para picos + growth</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RAM</strong></td>
+                            <td>32 GB total, 19 GB used (Buffer Pool)</td>
+                            <td>128 GB</td>
+                            <td>4x capacidad actual para crecimiento</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IOPS</strong></td>
+                            <td>Avg: 547 | Peak: 4607 (midnight batch)</td>
+                            <td>Premium SSD P20 (2300 IOPS + burst 3500)</td>
+                            <td>Cubre peak con margen del 10%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Storage</strong></td>
+                            <td>Datos: ~250 GB, Logs: ~50 GB</td>
+                            <td>P20 (512 GB Data) + P15 (256 GB Log)</td>
+                            <td>Separación Data/Log + growth</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Network Bandwidth</strong></td>
+                            <td>1 Gbps NIC</td>
+                            <td>12,500 Mbps (E16ds_v5)</td>
+                            <td>12.5x bandwidth para replicación</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="alert alert-success">
+                    <strong>✅ Recomendación Final de Azure Migrate:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li><strong>Target:</strong> Azure VM IaaS (Standard_E16ds_v5)</li>
+                        <li><strong>Razón:</strong> 100% compatibility, BYOL cost savings, lift & shift speed</li>
+                        <li><strong>Monthly Cost:</strong> €1,000 (con BYOL y todos los servicios)</li>
+                        <li><strong>TCO 3 años:</strong> €36,000 vs €47,771 On-Prem = <strong>€11,771 ahorro (25%)</strong></li>
+                        <li><strong>Compatibility:</strong> 0 blocking issues, 0 deprecation warnings</li>
+                        <li><strong>Performance:</strong> Capacity suficiente para 2x crecimiento futuro</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <strong>⚠️ Próximos Pasos:</strong>
+                    <ol style="margin-top: 0.5rem;">
+                        <li>Revisar assessment report con stakeholders</li>
+                        <li>Validar que no hay blocking compatibility issues</li>
+                        <li>Aprobar presupuesto y timeline de migración</li>
+                        <li>Proceder con setup de Azure Database Migration Service →</li>
+                    </ol>
+                </div>
+            </section>
+            
+            <section id="dms-online">
+                <h2>🔄 Database Migration Service: Migración Online</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    La migración <strong>online</strong> utiliza replicación continua para mantener el servidor origen sincronizado 
+                    con Azure hasta el momento del cutover, minimizando downtime a < 4 horas.
+                </p>
+                
+                <div class="alert alert-info">
+                    <strong>✅ Ventajas Migración Online:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li><strong>Downtime mínimo:</strong> Solo durante cutover (< 4 horas)</li>
+                        <li><strong>Zero data loss:</strong> Replicación continua transaction logs</li>
+                        <li><strong>Rollback posible:</strong> Origen permanece activo hasta validación</li>
+                        <li><strong>Testing sin impacto:</strong> Validar Azure VM antes de cutover</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <strong>⚠️ Requisitos:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Recovery Model: <strong>FULL</strong> (no Simple)</li>
+                        <li>Conectividad: VPN/ExpressRoute estable (latency < 50ms)</li>
+                        <li>Permissions: sysadmin en origen y destino</li>
+                        <li>Firewall: Puerto 1433 bidireccional</li>
+                    </ul>
+                </div>
+                
+                <h3>Paso 1: Crear Database Migration Service</h3>
+                
+                <div class="code-header">
+                    <span>Azure CLI - Crear DMS Instance</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-bash"># Variables
+RESOURCE_GROUP="rg-migration-project"
+LOCATION="westeurope"
+DMS_NAME="dms-sqlserver-migration"
+VNET_NAME="vnet-migration"
+SUBNET_NAME="snet-dms"
+
+# Crear VNet para DMS (si no existe)
+az network vnet create \
+    --resource-group $RESOURCE_GROUP \
+    --name $VNET_NAME \
+    --address-prefix 10.10.0.0/16 \
+    --subnet-name $SUBNET_NAME \
+    --subnet-prefix 10.10.1.0/24 \
+    --location $LOCATION
+
+# Crear Database Migration Service
+az dms create \
+    --resource-group $RESOURCE_GROUP \
+    --name $DMS_NAME \
+    --location $LOCATION \
+    --sku-name Premium_4vCores \
+    --subnet "/subscriptions/{subscription-id}/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Network/virtualNetworks/$VNET_NAME/subnets/$SUBNET_NAME"
+
+echo "✅ DMS creado: $DMS_NAME (SKU: Premium_4vCores)"</code></pre>
+                </div>
+                
+                <h3>Paso 2: Preparar SQL Server Origen</h3>
+                
+                <div class="code-header">
+                    <span>SQL - Verificar y Configurar Origen</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-sql">-- 1. Verificar Recovery Model
+SELECT name, recovery_model_desc 
+FROM sys.databases 
+WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb');
+
+-- Si alguna DB está en SIMPLE, cambiar a FULL
+ALTER DATABASE [YourDatabase] SET RECOVERY FULL;
+
+-- 2. Ejecutar Full Backup (requerido para iniciar replicación)
+BACKUP DATABASE [YourDatabase] 
+TO DISK = 'C:\Backups\YourDatabase_Full.bak' 
+WITH INIT, COMPRESSION, STATS = 10;
+
+-- 3. Verificar Backup completado
+SELECT 
+    database_name,
+    type,
+    backup_start_date,
+    backup_finish_date,
+    DATEDIFF(MINUTE, backup_start_date, backup_finish_date) AS DurationMinutes,
+    backup_size / 1024 / 1024 AS BackupSizeMB
+FROM msdb.dbo.backupset 
+WHERE database_name = 'YourDatabase'
+ORDER BY backup_start_date DESC;
+
+-- 4. Habilitar Advanced Options para linked servers (si se usan)
+sp_configure 'show advanced options', 1;
+RECONFIGURE;
+sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE;</code></pre>
+                </div>
+                
+                <h3>Paso 3: Crear Migration Project</h3>
+                
+                <div class="code-header">
+                    <span>Azure CLI - Crear Proyecto de Migración</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-bash"># Crear proyecto de migración
+PROJECT_NAME="sqlserver-online-migration"
+
+az dms project create \
+    --resource-group $RESOURCE_GROUP \
+    --service-name $DMS_NAME \
+    --name $PROJECT_NAME \
+    --source-platform SQL \
+    --target-platform SQLDB \
+    --location $LOCATION
+
+echo "✅ Proyecto creado: $PROJECT_NAME"
+
+# Listar proyectos
+az dms project list \
+    --resource-group $RESOURCE_GROUP \
+    --service-name $DMS_NAME \
+    --output table</code></pre>
+                </div>
+                
+                <h3>Paso 4: Configurar Source & Target Connections</h3>
+                
+                <div class="code-header">
+                    <span>PowerShell - Crear Connection Info</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Conexión SQL Server Origen (on-premises)
+$sourceConnectionInfo = @{
+    serverName = "sqlserver-onprem.company.local"
+    port = 1433
+    authentication = "SqlAuthentication"
+    userName = "sa"
+    password = (ConvertTo-SecureString "P@ssw0rd!" -AsPlainText -Force)
+    encryptConnection = $true
+    trustServerCertificate = $true
+}
+
+# Conexión Azure SQL VM Destino
+$targetConnectionInfo = @{
+    serverName = "sqlvm-azure.westeurope.cloudapp.azure.com"
+    port = 1433
+    authentication = "SqlAuthentication"
+    userName = "sqladmin"
+    password = (ConvertTo-SecureString "AzureP@ssw0rd!" -AsPlainText -Force)
+    encryptConnection = $true
+    trustServerCertificate = $false
+}
+
+# Test conectividad origen
+Write-Host "Testing source connection..." -ForegroundColor Yellow
+$sourceConn = New-Object System.Data.SqlClient.SqlConnection
+$sourceConn.ConnectionString = "Server=$($sourceConnectionInfo.serverName),$($sourceConnectionInfo.port);User ID=$($sourceConnectionInfo.userName);Password=P@ssw0rd!;Encrypt=true;TrustServerCertificate=true"
+
+try {
+    $sourceConn.Open()
+    Write-Host "✅ Source connection successful" -ForegroundColor Green
+    $sourceConn.Close()
+} catch {
+    Write-Host "❌ Source connection failed: $_" -ForegroundColor Red
+}
+
+# Test conectividad destino
+Write-Host "Testing target connection..." -ForegroundColor Yellow
+$targetConn = New-Object System.Data.SqlClient.SqlConnection
+$targetConn.ConnectionString = "Server=$($targetConnectionInfo.serverName),$($targetConnectionInfo.port);User ID=$($targetConnectionInfo.userName);Password=AzureP@ssw0rd!;Encrypt=true"
+
+try {
+    $targetConn.Open()
+    Write-Host "✅ Target connection successful" -ForegroundColor Green
+    $targetConn.Close()
+} catch {
+    Write-Host "❌ Target connection failed: $_" -ForegroundColor Red
+}</code></pre>
+                </div>
+                
+                <h3>Paso 5: Iniciar Replicación Online</h3>
+                
+                <div class="code-header">
+                    <span>Azure CLI - Crear Migration Task (Online Mode)</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-bash"># Crear migration task en modo online
+TASK_NAME="migrate-task-online-001"
+SOURCE_DB="ProductionDB"
+TARGET_DB="ProductionDB"
+
+# Configuración de la tarea (JSON)
+cat > migration-config.json <<EOF
+{
+    "taskType": "Migrate.SqlServer.AzureSqlDb.Sync",
+    "input": {
+        "sourceConnectionInfo": {
+            "serverName": "sqlserver-onprem.company.local",
+            "port": 1433,
+            "authentication": "SqlAuthentication",
+            "userName": "sa",
+            "password": "P@ssw0rd!",
+            "encryptConnection": true,
+            "trustServerCertificate": true
+        },
+        "targetConnectionInfo": {
+            "serverName": "sqlvm-azure.westeurope.cloudapp.azure.com",
+            "port": 1433,
+            "authentication": "SqlAuthentication",
+            "userName": "sqladmin",
+            "password": "AzureP@ssw0rd!",
+            "encryptConnection": true
+        },
+        "selectedDatabases": [
+            {
+                "name": "$SOURCE_DB",
+                "targetDatabaseName": "$TARGET_DB",
+                "makeSourceDbReadOnly": false,
+                "tableMap": {}
+            }
+        ]
+    }
+}
+EOF
+
+# Ejecutar migration task
+az dms project task create \
+    --resource-group $RESOURCE_GROUP \
+    --service-name $DMS_NAME \
+    --project-name $PROJECT_NAME \
+    --name $TASK_NAME \
+    --task-type "Migrate.SqlServer.SqlDb.Sync" \
+    --source-connection-json "$(cat migration-config.json | jq -c .input.sourceConnectionInfo)" \
+    --target-connection-json "$(cat migration-config.json | jq -c .input.targetConnectionInfo)" \
+    --database-options-json "$(cat migration-config.json | jq -c .input.selectedDatabases)"
+
+echo "✅ Migration task iniciada: $TASK_NAME"
+echo "La replicación continua está en progreso..."</code></pre>
+                </div>
+                
+                <h3>Paso 6: Monitorear Replicación</h3>
+                
+                <div class="code-header">
+                    <span>PowerShell - Monitorear Progreso</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Monitorear estado de replicación cada 30 segundos
+$resourceGroup = "rg-migration-project"
+$dmsName = "dms-sqlserver-migration"
+$projectName = "sqlserver-online-migration"
+$taskName = "migrate-task-online-001"
+
+while ($true) {
+    Clear-Host
+    Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+    Write-Host "  DMS Online Migration Monitor - $(Get-Date -Format 'HH:mm:ss')" -ForegroundColor Green
+    Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+    
+    # Obtener estado de la tarea
+    $task = az dms project task show `
+        --resource-group $resourceGroup `
+        --service-name $dmsName `
+        --project-name $projectName `
+        --name $taskName `
+        --output json | ConvertFrom-Json
+    
+    Write-Host "`nTask State: $($task.state)" -ForegroundColor Yellow
+    Write-Host "Migration Type: $($task.taskType)"
+    
+    if ($task.output) {
+        foreach ($dbMigration in $task.output) {
+            Write-Host "`n📊 Database: $($dbMigration.sourceDatabaseName)" -ForegroundColor Cyan
+            Write-Host "   Status: $($dbMigration.migrationState)"
+            Write-Host "   Full Load Progress: $($dbMigration.fullLoadTablesCompleted)/$($dbMigration.fullLoadTableCount) tables"
+            Write-Host "   CDC Changes: $($dbMigration.cdcInsertCounter) inserts, $($dbMigration.cdcUpdateCounter) updates, $($dbMigration.cdcDeleteCounter) deletes"
+            
+            if ($dbMigration.fullLoadEstimatedEndTime) {
+                Write-Host "   Estimated Completion: $($dbMigration.fullLoadEstimatedEndTime)"
+            }
+        }
+    }
+    
+    # Si la replicación está en sync, mostrar lag
+    if ($task.state -eq "Running") {
+        Write-Host "`n✅ Continuous Replication Active" -ForegroundColor Green
+        Write-Host "   Replication Lag: < 5 seconds (target)"
+        Write-Host "`n💡 Ready for cutover when lag is minimal (<5s)"
+    }
+    
+    Start-Sleep -Seconds 30
+}</code></pre>
+                </div>
+                
+                <h3>Paso 7: Ejecutar Cutover</h3>
+                
+                <ul class="steps">
+                    <li>
+                        <strong>Validar Lag de Replicación</strong><br>
+                        Esperar hasta que replication lag < 5 segundos<br>
+                        Verificar: 0 pending transactions en origen
+                    </li>
+                    <li>
+                        <strong>Notificar a Usuarios</strong><br>
+                        Anunciar ventana de mantenimiento (4 horas máximo)<br>
+                        Deshabilitar acceso a aplicaciones
+                    </li>
+                    <li>
+                        <strong>Detener Aplicaciones Origen</strong><br>
+                        Stop services, IIS app pools, scheduled jobs<br>
+                        Verificar: 0 active connections en SQL Server
+                    </li>
+                    <li>
+                        <strong>Ejecutar Cutover en DMS</strong><br>
+                        Azure Portal → DMS Task → Click "Complete cutover"<br>
+                        O vía CLI: <code>az dms project task cutover ...</code>
+                    </li>
+                    <li>
+                        <strong>Validar Data Integrity</strong><br>
+                        Ejecutar queries de validación en Azure VM<br>
+                        Comparar row counts, checksums con origen
+                    </li>
+                    <li>
+                        <strong>Actualizar Connection Strings</strong><br>
+                        Apuntar aplicaciones al nuevo endpoint Azure VM<br>
+                        DNS update: <code>sqlserver.company.local</code> → Azure VM IP
+                    </li>
+                    <li>
+                        <strong>Reactivar Aplicaciones</strong><br>
+                        Start services en Azure VM<br>
+                        Monitorear logs primeras 2 horas
+                    </li>
+                </ul>
+                
+                <div class="alert alert-success">
+                    <strong>✅ Post-Cutover Checklist:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li>☑️ Aplicaciones funcionando correctamente en Azure</li>
+                        <li>☑️ Performance similar o mejor (verificar query times)</li>
+                        <li>☑️ 0 errores en application logs (2 horas post-cutover)</li>
+                        <li>☑️ Backup schedule configurado en Azure Backup</li>
+                        <li>☑️ Monitoring alerts activos (CPU, RAM, IOPS)</li>
+                        <li>☑️ Servidor origen en standby 48h (rollback window)</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="dms-offline">
+                <h2>💾 Database Migration Service: Migración Offline</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    La migración <strong>offline</strong> utiliza backup/restore tradicional. Más simple pero requiere downtime 
+                    completo durante todo el proceso (típicamente 4-8 horas dependiendo del tamaño).
+                </p>
+                
+                <div class="alert alert-warning">
+                    <strong>⚠️ Características Migración Offline:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li><strong>Downtime completo:</strong> 4-8 horas (desde backup hasta restore)</li>
+                        <li><strong>Simplicidad:</strong> Proceso tradicional backup → transfer → restore</li>
+                        <li><strong>Riesgo bajo:</strong> Método probado y confiable</li>
+                        <li><strong>Ideal para:</strong> Entornos dev/test o databases pequeñas (< 500 GB)</li>
+                    </ul>
+                </div>
+                
+                <h3>Paso 1: Backup Completo en Origen</h3>
+                
+                <div class="code-header">
+                    <span>SQL - Full Backup con Compresión</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-sql">-- 1. Verificar espacio disponible para backup
+EXEC sp_spaceused;
+
+-- 2. Ejecutar backup con compresión (reduce tamaño ~50-70%)
+BACKUP DATABASE [ProductionDB]
+TO DISK = 'E:\Backups\ProductionDB_Migration_Full.bak'
+WITH 
+    INIT,                    -- Sobrescribir archivo existente
+    COMPRESSION,             -- Comprimir backup
+    CHECKSUM,                -- Validar integridad
+    STATS = 5,               -- Mostrar progreso cada 5%
+    NAME = 'ProductionDB Full Backup for Azure Migration',
+    DESCRIPTION = 'Backup para migración a Azure VM - ' + CONVERT(VARCHAR, GETDATE(), 120);
+
+-- 3. Verificar backup completado exitosamente
+RESTORE VERIFYONLY 
+FROM DISK = 'E:\Backups\ProductionDB_Migration_Full.bak'
+WITH CHECKSUM;
+
+-- 4. Obtener info del backup
+SELECT 
+    database_name,
+    type,
+    backup_start_date,
+    backup_finish_date,
+    DATEDIFF(MINUTE, backup_start_date, backup_finish_date) AS DurationMinutes,
+    backup_size / 1024 / 1024 AS BackupSizeMB,
+    compressed_backup_size / 1024 / 1024 AS CompressedSizeMB,
+    CAST((1 - (CAST(compressed_backup_size AS FLOAT) / backup_size)) * 100 AS DECIMAL(5,2)) AS CompressionRatio
+FROM msdb.dbo.backupset 
+WHERE database_name = 'ProductionDB'
+    AND type = 'D'  -- Full backup
+ORDER BY backup_start_date DESC;</code></pre>
+                </div>
+                
+                <h3>Paso 2: Transferir Backup a Azure</h3>
+                
+                <p><strong>Opción A: Azure Blob Storage (recomendado para archivos grandes)</strong></p>
+                
+                <div class="code-header">
+                    <span>PowerShell - Upload a Azure Blob con AzCopy</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Instalar AzCopy (si no está instalado)
+# Download desde: https://aka.ms/downloadazcopy-v10-windows
+
+# Variables
+$storageAccountName = "stmigrationbackups"
+$containerName = "sql-backups"
+$backupFile = "E:\Backups\ProductionDB_Migration_Full.bak"
+$sasToken = "?sv=2021-06-08&ss=b&srt=sco&sp=rwdlacx&se=..."  # Generar desde Portal
+
+# Upload con AzCopy (incluye progreso y retry automático)
+azcopy copy $backupFile `
+    "https://$storageAccountName.blob.core.windows.net/$containerName/ProductionDB_Migration_Full.bak$sasToken" `
+    --blob-type BlockBlob `
+    --check-length=false
+
+Write-Host "✅ Backup uploaded to Azure Blob Storage" -ForegroundColor Green
+
+# Verificar upload
+az storage blob list `
+    --account-name $storageAccountName `
+    --container-name $containerName `
+    --output table</code></pre>
+                </div>
+                
+                <p><strong>Opción B: Direct Copy via VPN (más rápido si bandwidth es alto)</strong></p>
+                
+                <div class="code-header">
+                    <span>PowerShell - Copy via SMB sobre VPN</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Si la Azure VM está accesible por VPN, copy directo
+$source = "E:\Backups\ProductionDB_Migration_Full.bak"
+$destination = "\\sqlvm-azure\Backups\ProductionDB_Migration_Full.bak"
+
+# Copy con progreso
+$sourceFile = Get-Item $source
+$totalBytes = $sourceFile.Length
+$copiedBytes = 0
+
+Write-Host "Copying $($sourceFile.Length / 1GB)GB to Azure VM..." -ForegroundColor Yellow
+
+Copy-Item -Path $source -Destination $destination -Force
+
+Write-Host "✅ Backup copied successfully" -ForegroundColor Green</code></pre>
+                </div>
+                
+                <h3>Paso 3: Restore en Azure VM</h3>
+                
+                <div class="code-header">
+                    <span>SQL - Restore Database en Azure</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-sql">-- 1. Si restore desde Azure Blob Storage (recomendado)
+-- Crear credential para acceder a blob
+CREATE CREDENTIAL [https://stmigrationbackups.blob.core.windows.net/sql-backups]
+WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+SECRET = 'sv=2021-06-08&ss=b&srt=sco&sp=rwdlacx&se=...';  -- SAS token
+
+-- 2. Obtener file list del backup
+RESTORE FILELISTONLY 
+FROM URL = 'https://stmigrationbackups.blob.core.windows.net/sql-backups/ProductionDB_Migration_Full.bak';
+
+-- 3. Restore database con nuevas rutas en Azure (Premium SSD)
+RESTORE DATABASE [ProductionDB]
+FROM URL = 'https://stmigrationbackups.blob.core.windows.net/sql-backups/ProductionDB_Migration_Full.bak'
+WITH 
+    MOVE 'ProductionDB_Data' TO 'F:\SQLData\ProductionDB.mdf',     -- Data disk (P20)
+    MOVE 'ProductionDB_Log' TO 'G:\SQLLog\ProductionDB_log.ldf',   -- Log disk (P15)
+    STATS = 5,
+    CHECKSUM,
+    REPLACE;
+
+-- 4. Verificar integridad post-restore
+DBCC CHECKDB('ProductionDB') WITH NO_INFOMSGS;
+
+-- 5. Actualizar statistics
+USE [ProductionDB];
+GO
+EXEC sp_updatestats;
+
+-- 6. Rebuild indices fragmentados
+EXEC sp_MSforeachtable 'ALTER INDEX ALL ON ? REBUILD';
+
+-- 7. Verificar compatibility level
+SELECT name, compatibility_level FROM sys.databases WHERE name = 'ProductionDB';
+-- Si es necesario, actualizar: ALTER DATABASE [ProductionDB] SET COMPATIBILITY_LEVEL = 150;</code></pre>
+                </div>
+                
+                <h3>Paso 4: Post-Restore Configuration</h3>
+                
+                <div class="code-header">
+                    <span>SQL - Configuración Post-Restore</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-sql">-- 1. Configurar recovery model (mantener FULL para backups)
+ALTER DATABASE [ProductionDB] SET RECOVERY FULL;
+
+-- 2. Re-crear logins (orphaned users fix)
+USE [ProductionDB];
+GO
+
+-- Listar orphaned users
+EXEC sp_change_users_login 'Report';
+
+-- Fix orphaned users
+EXEC sp_change_users_login 'Auto_Fix', 'AppUser';
+
+-- 3. Configurar opciones de database
+ALTER DATABASE [ProductionDB] SET AUTO_CREATE_STATISTICS ON;
+ALTER DATABASE [ProductionDB] SET AUTO_UPDATE_STATISTICS ON;
+ALTER DATABASE [ProductionDB] SET PAGE_VERIFY CHECKSUM;
+ALTER DATABASE [ProductionDB] SET TARGET_RECOVERY_TIME = 60 SECONDS;
+
+-- 4. Configurar SQL Server instance options
+EXEC sp_configure 'max server memory (MB)', 102400;  -- 100 GB (dejar 28 GB para OS)
+RECONFIGURE;
+
+EXEC sp_configure 'optimize for ad hoc workloads', 1;
+RECONFIGURE;
+
+EXEC sp_configure 'cost threshold for parallelism', 50;
+RECONFIGURE;
+
+-- 5. Configurar TempDB en local SSD (D:\ en Azure VMs)
+-- Mover TempDB files (requiere restart)
+ALTER DATABASE tempdb MODIFY FILE 
+    (NAME = tempdev, FILENAME = 'D:\SQLTemp\tempdb.mdf');
+ALTER DATABASE tempdb MODIFY FILE 
+    (NAME = templog, FILENAME = 'D:\SQLTemp\templog.ldf');
+
+-- Nota: Restart SQL Server service para aplicar cambios TempDB
+
+-- 6. Verificar configuración
+SELECT 
+    name,
+    recovery_model_desc,
+    compatibility_level,
+    state_desc,
+    is_auto_create_stats_on,
+    is_auto_update_stats_on
+FROM sys.databases
+WHERE name = 'ProductionDB';</code></pre>
+                </div>
+                
+                <h3>Paso 5: Validation Testing</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test</th>
+                            <th>Comando/Query</th>
+                            <th>Expected Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Row Count Validation</strong></td>
+                            <td><code>SELECT COUNT(*) FROM TableName</code></td>
+                            <td>Match con origen</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Checksum Validation</strong></td>
+                            <td><code>CHECKSUM TABLE TableName</code></td>
+                            <td>Same checksum vs origen</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Performance Baseline</strong></td>
+                            <td><code>SET STATISTICS TIME, IO ON; SELECT ...</code></td>
+                            <td>Similar or better execution time</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Application Smoke Tests</strong></td>
+                            <td>Run critical business queries</td>
+                            <td>0 errors, correct data returned</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Connectivity Test</strong></td>
+                            <td><code>Test-NetConnection -ComputerName sqlvm-azure -Port 1433</code></td>
+                            <td>Success</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Comparación Online vs Offline</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aspecto</th>
+                            <th>Online (DMS Sync)</th>
+                            <th>Offline (Backup/Restore)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Downtime</strong></td>
+                            <td style="background: #e8f5e9;">< 4 horas (solo cutover)</td>
+                            <td style="background: #fffbea;">4-8 horas (completo)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Loss Risk</strong></td>
+                            <td style="background: #e8f5e9;">Zero (replicación continua)</td>
+                            <td style="background: #fffbea;">Minimal (backup point-in-time)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Complejidad</strong></td>
+                            <td style="background: #fffbea;">Alta (DMS setup, monitoring)</td>
+                            <td style="background: #e8f5e9;">Baja (backup/restore estándar)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rollback</strong></td>
+                            <td style="background: #e8f5e9;">Fácil (origen activo)</td>
+                            <td style="background: #fffbea;">Requiere restore inverso</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Costo</strong></td>
+                            <td style="background: #fffbea;">Premium DMS (€500-800/mes)</td>
+                            <td style="background: #e8f5e9;">Storage costs only (~€50)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Testing</strong></td>
+                            <td style="background: #e8f5e9;">Validar antes de cutover</td>
+                            <td style="background: #fffbea;">Solo post-restore</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Recomendado Para</strong></td>
+                            <td>Producción, databases grandes, 24/7 availability</td>
+                            <td>Dev/Test, databases pequeñas, ventanas de mantenimiento</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="alert alert-info">
+                    <strong>💡 Recomendación:</strong> Para este proyecto (SQL Server 2025 Enterprise en producción), 
+                    se recomienda <strong>migración online</strong> con DMS para minimizar downtime y riesgo. 
+                    La inversión en DMS Premium (€600 por el mes de migración) se justifica por:
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Downtime reducido a < 4 horas vs 8+ horas offline</li>
+                        <li>Zero data loss garantizado con replicación continua</li>
+                        <li>Capacidad de testing exhaustivo antes del cutover final</li>
+                        <li>Rollback inmediato sin impacto si se detectan problemas</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="bicep-infrastructure">
+                <h2>☁️ Despliegue de Infraestructura con Bicep</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    Infrastructure as Code para desplegar toda la infraestructura Azure de forma automatizada, 
+                    reproducible y versionada. Incluye VNet, NSG, VM, discos, Bastion, Backup y Monitoring.
+                </p>
+                
+                <div class="alert alert-info">
+                    <strong>📦 Arquitectura Desplegada:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li><strong>Compute:</strong> Azure VM Standard_E16ds_v5 (16 vCPUs, 128 GB RAM)</li>
+                        <li><strong>Storage:</strong> P10 OS (128 GB) + P20 Data (512 GB) + P15 Log (256 GB)</li>
+                        <li><strong>Networking:</strong> VNet (10.0.0.0/16), Subnet SQL (10.0.1.0/24), NSG con reglas restrictivas</li>
+                        <li><strong>Security:</strong> Azure Bastion (no public IP en VM), Private Endpoints</li>
+                        <li><strong>Backup:</strong> Azure Backup con retention 30 días</li>
+                        <li><strong>Monitoring:</strong> Log Analytics + Azure Monitor Agents</li>
+                    </ul>
+                </div>
+                
+                <h3>Estructura del Proyecto Bicep</h3>
+                
+                <div class="code-header">
+                    <span>Bash - Estructura de Archivos</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-bash">bicep-infrastructure/
+├── infrastructure.bicep          # Main orchestrator
+├── parameters/
+│   ├── dev.bicepparam           # Dev environment params
+│   ├── test.bicepparam          # Test environment params
+│   └── prod.bicepparam          # Production params
+└── modules/
+    ├── networking.bicep         # VNet, NSG, Bastion
+    ├── sql-vm.bicep             # VM, NICs, disks
+    ├── monitoring.bicep         # Log Analytics, alerts
+    └── backup.bicep             # Recovery Services Vault</code></pre>
+                </div>
+                
+                <h3>📝 Archivo Principal (infrastructure.bicep)</h3>
+                
+                <p>El código Bicep completo está disponible en: <code><strong>infrastructure.bicep</strong></code></p>
+                
+                <div class="alert alert-success">
+                    <strong>✅ Características del Código:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Modular: Separado en módulos reutilizables</li>
+                        <li>Parametrizado: Fácil ajuste por entorno (dev/test/prod)</li>
+                        <li>Secure: Admin password como @secure parameter</li>
+                        <li>Tagged: Todos los recursos con tags de governanza</li>
+                        <li>BYOL: Configurable SQL license type</li>
+                        <li>Outputs: IPs, IDs de recursos para referencia</li>
+                    </ul>
+                </div>
+                
+                <h3>Parámetros de Producción (prod.bicepparam)</h3>
+                
+                <div class="code-header">
+                    <span>Bicep Parameters - prod.bicepparam</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-bicep">using './infrastructure.bicep'
+
+param environment = 'prod'
+param location = 'westeurope'
+param projectName = 'sqlmigration'
+param adminUsername = 'sqladmin'
+param adminPassword = readEnvironmentVariable('AZURE_SQL_ADMIN_PASSWORD')  // From env var or Key Vault
+param sqlLicenseType = 'BYOL'  // Azure Hybrid Benefit
+param enableBastion = true
+param enableBackup = true
+
+param tags = {
+  Environment: 'Production'
+  Project: 'SQL Server Migration'
+  ManagedBy: 'Bicep IaC'
+  CostCenter: 'IT-Operations'
+  Owner: 'dba-team@company.com'
+  Criticality: 'High'
+  DR: 'Tier-1'
+}</code></pre>
+                </div>
+                
+                <h3>Paso 1: Validar Código Bicep</h3>
+                
+                <div class="code-header">
+                    <span>Azure CLI - Validar Bicep</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-bash"># Autenticación
+az login
+az account set --subscription "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+
+# Build Bicep (compilar a ARM JSON)
+az bicep build --file infrastructure.bicep
+
+# Validar sintaxis
+az deployment sub validate \
+    --location westeurope \
+    --template-file infrastructure.bicep \
+    --parameters parameters/prod.bicepparam
+
+echo "✅ Validation successful"</code></pre>
+                </div>
+                
+                <h3>Paso 2: What-If Analysis (Pre-Deploy Dry-Run)</h3>
+                
+                <div class="code-header">
+                    <span>Azure CLI - What-If Deployment</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-bash"># What-if muestra qué recursos se crearán/modificarán sin ejecutar
+az deployment sub what-if \
+    --location westeurope \
+    --template-file infrastructure.bicep \
+    --parameters parameters/prod.bicepparam \
+    --result-format FullResourcePayloads
+
+# Review output:
+# + Create: Recursos nuevos (verde)
+# ~ Modify: Cambios en recursos existentes (amarillo)
+# - Delete: Recursos a eliminar (rojo)
+# = No change: Sin cambios (gris)
+
+# Guardar what-if output para revisión
+az deployment sub what-if \
+    --location westeurope \
+    --template-file infrastructure.bicep \
+    --parameters parameters/prod.bicepparam \
+    > whatif-output.txt
+
+echo "✅ What-if analysis saved to whatif-output.txt"</code></pre>
+                </div>
+                
+                <h3>Paso 3: Desplegar Infraestructura</h3>
+                
+                <div class="code-header">
+                    <span>Azure CLI - Deploy Infrastructure</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-bash"># Set admin password desde variable de entorno (más seguro)
+export AZURE_SQL_ADMIN_PASSWORD="YourSecureP@ssw0rd!"
+
+# Deploy (duración estimada: 15-20 minutos)
+DEPLOYMENT_NAME="sqlmigration-$(date +%Y%m%d-%H%M%S)"
+
+az deployment sub create \
+    --name $DEPLOYMENT_NAME \
+    --location westeurope \
+    --template-file infrastructure.bicep \
+    --parameters parameters/prod.bicepparam \
+    --parameters adminPassword=$AZURE_SQL_ADMIN_PASSWORD
+
+# Obtener outputs del deployment
+az deployment sub show \
+    --name $DEPLOYMENT_NAME \
+    --query properties.outputs
+
+# Guardar outputs para referencia
+az deployment sub show \
+    --name $DEPLOYMENT_NAME \
+    --query properties.outputs > deployment-outputs.json
+
+echo "✅ Infrastructure deployed successfully"
+echo "Review outputs in deployment-outputs.json"</code></pre>
+                </div>
+                
+                <h3>Paso 4: Post-Deployment Configuration</h3>
+                
+                <div class="code-header">
+                    <span>PowerShell - Post-Deploy Setup</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Leer outputs del deployment
+$outputs = Get-Content deployment-outputs.json | ConvertFrom-Json
+$vmPrivateIp = $outputs.vmPrivateIp.value
+$resourceGroupName = $outputs.resourceGroupName.value
+
+Write-Host "VM Private IP: $vmPrivateIp" -ForegroundColor Green
+Write-Host "Resource Group: $resourceGroupName" -ForegroundColor Green
+
+# Conectar a la VM via Bastion (Azure Portal UI)
+Write-Host "`nPara conectar a la VM:" -ForegroundColor Yellow
+Write-Host "1. Azure Portal → Virtual Machines → vm-sql-prod"
+Write-Host "2. Click 'Connect' → 'Bastion'"
+Write-Host "3. Username: sqladmin | Password: (from Key Vault)"
+
+# Instalar SQL Server en la VM (manual o via extension)
+# La VM base de Azure Marketplace ya incluye SQL Server 2025
+
+# Configurar SQL Server post-install
+Write-Host "`n🔧 SQL Server Configuration Tasks:" -ForegroundColor Cyan
+Write-Host "1. Configure max server memory: 102400 MB (100 GB)"
+Write-Host "2. Move TempDB to D:\ (local SSD)"
+Write-Host "3. Configure Data disk (F:\) para databases"
+Write-Host "4. Configure Log disk (G:\) para transaction logs"
+Write-Host "5. Enable TCP/IP protocol"
+Write-Host "6. Configure firewall rules (NSG ya permite 1433 desde VPN)"
+Write-Host "7. Create SQL logins para aplicaciones"</code></pre>
+                </div>
+                
+                <h3>Outputs del Deployment</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Output</th>
+                            <th>Descripción</th>
+                            <th>Uso</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>resourceGroupName</strong></td>
+                            <td>Nombre del resource group creado</td>
+                            <td>Para gestionar recursos</td>
+                        </tr>
+                        <tr>
+                            <td><strong>vnetId</strong></td>
+                            <td>ID de la VNet</td>
+                            <td>Para peering con otras VNets</td>
+                        </tr>
+                        <tr>
+                            <td><strong>vmPrivateIp</strong></td>
+                            <td>IP privada de la SQL VM (10.0.1.4)</td>
+                            <td>Connection strings de aplicaciones</td>
+                        </tr>
+                        <tr>
+                            <td><strong>bastionFQDN</strong></td>
+                            <td>FQDN del Azure Bastion</td>
+                            <td>Para acceso seguro a la VM</td>
+                        </tr>
+                        <tr>
+                            <td><strong>logAnalyticsWorkspaceId</strong></td>
+                            <td>ID del Log Analytics workspace</td>
+                            <td>Para queries de monitoring</td>
+                        </tr>
+                        <tr>
+                            <td><strong>backupVaultId</strong></td>
+                            <td>ID del Recovery Services Vault</td>
+                            <td>Para gestión de backups</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Costo del Deployment</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Recurso</th>
+                            <th>SKU/Tier</th>
+                            <th>Costo Mensual (€)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SQL Server VM</td>
+                            <td>Standard_E16ds_v5</td>
+                            <td>€600</td>
+                        </tr>
+                        <tr>
+                            <td>OS Disk (P10)</td>
+                            <td>Premium SSD 128 GB</td>
+                            <td>€20</td>
+                        </tr>
+                        <tr>
+                            <td>Data Disk (P20)</td>
+                            <td>Premium SSD 512 GB</td>
+                            <td>€60</td>
+                        </tr>
+                        <tr>
+                            <td>Log Disk (P15)</td>
+                            <td>Premium SSD 256 GB</td>
+                            <td>€40</td>
+                        </tr>
+                        <tr>
+                            <td>Azure Bastion</td>
+                            <td>Standard (2 instances)</td>
+                            <td>€130</td>
+                        </tr>
+                        <tr>
+                            <td>Azure Backup</td>
+                            <td>500 GB protected</td>
+                            <td>€25</td>
+                        </tr>
+                        <tr>
+                            <td>Log Analytics</td>
+                            <td>5 GB/day ingestion</td>
+                            <td>€15</td>
+                        </tr>
+                        <tr>
+                            <td>Azure Monitor</td>
+                            <td>Metrics + alerts</td>
+                            <td>€10</td>
+                        </tr>
+                        <tr style="background: var(--gray-100); font-weight: bold;">
+                            <td colspan="2"><strong>TOTAL MENSUAL</strong></td>
+                            <td><strong>€900</strong></td>
+                        </tr>
+                        <tr style="background: #e8f5e9; font-weight: bold;">
+                            <td colspan="2"><strong>Con BYOL (SQL Server)</strong></td>
+                            <td><strong>€900 (sin costo adicional licencia)</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Gestión del Código Bicep</h3>
+                
+                <div class="alert alert-warning">
+                    <strong>🔄 Best Practices:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li><strong>Version Control:</strong> Almacenar código Bicep en Git (GitHub/Azure DevOps)</li>
+                        <li><strong>CI/CD:</strong> Automatizar validación + what-if + deploy con GitHub Actions</li>
+                        <li><strong>Environments:</strong> Branch strategy (main = prod, develop = test, feature/* = dev)</li>
+                        <li><strong>Secrets:</strong> Nunca hardcodear passwords, usar Key Vault references</li>
+                        <li><strong>Testing:</strong> Validar en dev/test antes de prod deployment</li>
+                        <li><strong>Rollback:</strong> Mantener versiones anteriores para rollback rápido</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-success">
+                    <strong>✅ Deployment Completado:</strong> La infraestructura está lista para recibir la migración de la base de datos. 
+                    Próximo paso: Ejecutar migration con DMS (sección anterior) o backup/restore.
+                </div>
+            </section>
+            
+            <section id="timeline">
+                <h2>📅 Timeline de Migración: 6 Semanas</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    Cronograma detallado para una migración controlada con fases de planning, 
+                    setup, testing, migration, cutover y go-live. Incluye hitos críticos y responsables.
+                </p>
+                
+                <div class="alert alert-info">
+                    <strong>🎯 Duración Total Estimada:</strong> 6 semanas (42 días calendario)
+                    <br><strong>⏱️ Downtime Ventana:</strong> 4 horas (durante cutover en Week 5)
+                    <br><strong>👥 Team Size:</strong> 6 personas (Cloud Architect, DBA, DevOps, QA, App Owner, Operations)
+                </div>
+                
+                <h3>Diagrama Gantt - 6 Semanas</h3>
+                
+                <div class="mermaid">
+gantt
+    title SQL Server Migration Timeline - 6 Weeks
+    dateFormat YYYY-MM-DD
+    
+    section Week 1 - Planning
+    Requirements & Assessment       :done,    planning1, 2024-02-01, 3d
+    Azure Migrate Discovery         :done,    planning2, after planning1, 2d
+    Cost Approval & Budget          :done,    planning3, after planning2, 1d
+    Timeline Sign-off               :crit,    planning4, after planning3, 1d
+    
+    section Week 2 - Setup
+    Deploy Azure Infrastructure     :active,  setup1, 2024-02-08, 2d
+    Configure VPN/ExpressRoute      :active,  setup2, after setup1, 1d
+    Setup DMS Instance              :active,  setup3, after setup2, 1d
+    Configure Backup & Monitoring   :        setup4, after setup3, 1d
+    Security & Compliance Validation:        setup5, after setup4, 2d
+    
+    section Week 3 - Testing
+    Deploy UAT Environment          :        test1, 2024-02-15, 2d
+    Performance Baseline Testing    :        test2, after test1, 2d
+    Application Compatibility Tests :        test3, after test2, 2d
+    UAT Sign-off                    :crit,   test4, after test3, 1d
+    
+    section Week 4 - Migration Prep
+    Full Backup & Transfer          :        migrate1, 2024-02-22, 2d
+    Initiate DMS Replication        :        migrate2, after migrate1, 1d
+    Monitor Sync & Replication Lag  :        migrate3, after migrate2, 4d
+    
+    section Week 5 - Cutover
+    Final Data Validation           :crit,   cutover1, 2024-02-29, 1d
+    Cutover Window (4h downtime)    :crit,   cutover2, after cutover1, 4h
+    Application Switchover          :crit,   cutover3, after cutover2, 2h
+    Post-Cutover Smoke Tests        :crit,   cutover4, after cutover3, 2h
+    
+    section Week 6 - Go-Live
+    24/7 Monitoring & Support       :        golive1, 2024-03-04, 3d
+    Performance Tuning              :        golive2, after golive1, 2d
+    Decommission On-Premises        :        golive3, after golive2, 2d
+                </div>
+                
+                <h3>Breakdown Semanal Detallado</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Week</th>
+                            <th>Fase</th>
+                            <th>Key Tasks</th>
+                            <th>Deliverables</th>
+                            <th>Owner</th>
+                            <th>Go/No-Go Gate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Week 1</strong><br>Feb 1-7</td>
+                            <td style="background: #e3f2fd;">📋 Planning</td>
+                            <td>
+                                • Azure Migrate assessment<br>
+                                • Cost analysis & approval<br>
+                                • Stakeholder alignment<br>
+                                • Timeline finalization<br>
+                                • Risk assessment
+                            </td>
+                            <td>
+                                ✅ Assessment report<br>
+                                ✅ Approved budget (€36k TCO)<br>
+                                ✅ Signed timeline<br>
+                                ✅ Risk mitigation plan
+                            </td>
+                            <td>Cloud Architect<br>+ CFO</td>
+                            <td style="background: #c8e6c9;"><strong>✅ Budget Approved</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Week 2</strong><br>Feb 8-14</td>
+                            <td style="background: #fff3e0;">🔧 Setup</td>
+                            <td>
+                                • Deploy Bicep infrastructure<br>
+                                • Configure VPN/ExpressRoute<br>
+                                • Setup DMS instance<br>
+                                • Configure Azure Bastion<br>
+                                • Setup monitoring & alerts<br>
+                                • Security compliance scan
+                            </td>
+                            <td>
+                                ✅ Running Azure VM (E16ds_v5)<br>
+                                ✅ VPN connectivity validated<br>
+                                ✅ DMS instance ready<br>
+                                ✅ Bastion operational<br>
+                                ✅ Log Analytics ingesting data
+                            </td>
+                            <td>DevOps Engineer<br>+ Network Team</td>
+                            <td style="background: #c8e6c9;"><strong>✅ Infrastructure Ready</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Week 3</strong><br>Feb 15-21</td>
+                            <td style="background: #f3e5f5;">🧪 Testing</td>
+                            <td>
+                                • Deploy UAT environment<br>
+                                • Performance baseline (CPU, RAM, IOPS)<br>
+                                • Application compatibility tests<br>
+                                • Load testing (peak hours simulation)<br>
+                                • Security penetration testing<br>
+                                • UAT user acceptance
+                            </td>
+                            <td>
+                                ✅ UAT environment operational<br>
+                                ✅ Performance report (baseline)<br>
+                                ✅ 0 blocking issues detected<br>
+                                ✅ UAT sign-off from App Owner
+                            </td>
+                            <td>DBA Team<br>+ QA Team<br>+ App Owner</td>
+                            <td style="background: #c8e6c9;"><strong>✅ UAT Sign-off</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Week 4</strong><br>Feb 22-28</td>
+                            <td style="background: #e1f5fe;">🔄 Migration</td>
+                            <td>
+                                • Full backup source SQL Server<br>
+                                • Transfer backup to Azure Blob<br>
+                                • Initiate DMS online replication<br>
+                                • Monitor replication lag (target <5s)<br>
+                                • Incremental sync validation<br>
+                                • Prepare cutover runbook
+                            </td>
+                            <td>
+                                ✅ Full backup completed (compressed)<br>
+                                ✅ DMS replication active<br>
+                                ✅ Replication lag <5 seconds<br>
+                                ✅ CDC counters validated<br>
+                                ✅ Cutover runbook approved
+                            </td>
+                            <td>DBA Team<br>+ Cloud Architect</td>
+                            <td style="background: #c8e6c9;"><strong>✅ Replication Stable</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Week 5</strong><br>Feb 29-Mar 6</td>
+                            <td style="background: #ffebee;">🎯 Cutover</td>
+                            <td>
+                                <strong>Day 1 (Feb 29):</strong><br>
+                                • Final data validation<br>
+                                • Verify lag <5s<br>
+                                • Stakeholder notification<br>
+                                <br>
+                                <strong>Day 2 (Mar 1) - CUTOVER:</strong><br>
+                                • 🔴 <strong>22:00</strong> Stop applications (4h window)<br>
+                                • 22:15 Final sync & validation<br>
+                                • 22:30 Execute DMS cutover<br>
+                                • 23:00 Update connection strings<br>
+                                • 00:00 Smoke tests<br>
+                                • 01:00 Reactivate applications<br>
+                                • 🟢 <strong>02:00</strong> Cutover complete
+                            </td>
+                            <td>
+                                ✅ Zero data loss confirmed<br>
+                                ✅ All applications operational<br>
+                                ✅ Connection strings updated<br>
+                                ✅ Smoke tests passed<br>
+                                ✅ Rollback plan ready (not used)
+                            </td>
+                            <td>ALL HANDS<br>(Migration Team)</td>
+                            <td style="background: #ffccbc;"><strong>🚨 CRITICAL</strong><br>4h downtime</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Week 6</strong><br>Mar 4-10</td>
+                            <td style="background: #e8f5e9;">✅ Go-Live</td>
+                            <td>
+                                • 24/7 monitoring (first 72h)<br>
+                                • Performance tuning & optimization<br>
+                                • User feedback collection<br>
+                                • Decommission on-prem SQL Server<br>
+                                • Post-migration documentation<br>
+                                • Lessons learned session
+                            </td>
+                            <td>
+                                ✅ Stable production (0 incidents)<br>
+                                ✅ Performance within SLA<br>
+                                ✅ On-prem server decommissioned<br>
+                                ✅ Migration documentation<br>
+                                ✅ Project closure report
+                            </td>
+                            <td>Operations Team<br>+ DBA Team</td>
+                            <td style="background: #c8e6c9;"><strong>✅ Project Closure</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Hitos Críticos (Critical Milestones)</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Milestone</th>
+                            <th>Fecha</th>
+                            <th>Criterio de Éxito</th>
+                            <th>Blocker si Falla</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #e3f2fd;">
+                            <td><strong>M1: Budget Approval</strong></td>
+                            <td>Feb 7 (End Week 1)</td>
+                            <td>CFO firma €36k TCO aprobado</td>
+                            <td>🚫 Proyecto cancelado</td>
+                        </tr>
+                        <tr style="background: #fff3e0;">
+                            <td><strong>M2: Infrastructure Ready</strong></td>
+                            <td>Feb 14 (End Week 2)</td>
+                            <td>VM operativa, VPN conectado, DMS setup</td>
+                            <td>🚫 Retraso 1 semana</td>
+                        </tr>
+                        <tr style="background: #f3e5f5;">
+                            <td><strong>M3: UAT Sign-off</strong></td>
+                            <td>Feb 21 (End Week 3)</td>
+                            <td>App Owner firma: 0 blocking issues</td>
+                            <td>🚫 Volver a fase testing</td>
+                        </tr>
+                        <tr style="background: #e1f5fe;">
+                            <td><strong>M4: Replication Stable</strong></td>
+                            <td>Feb 28 (End Week 4)</td>
+                            <td>DMS lag <5s durante 24h continuas</td>
+                            <td>🚫 Postpone cutover 1 semana</td>
+                        </tr>
+                        <tr style="background: #ffebee; font-weight: bold;">
+                            <td><strong>M5: CUTOVER SUCCESS</strong></td>
+                            <td>Mar 1, 02:00 AM</td>
+                            <td>Apps funcionando en Azure, 0 data loss</td>
+                            <td>🚫 ROLLBACK inmediato</td>
+                        </tr>
+                        <tr style="background: #e8f5e9;">
+                            <td><strong>M6: Project Closure</strong></td>
+                            <td>Mar 10 (End Week 6)</td>
+                            <td>72h estable, on-prem decommissioned</td>
+                            <td>⚠️ Extended monitoring</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="alert alert-warning">
+                    <strong>⚠️ Riesgos y Contingencias:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li><strong>Riesgo 1:</strong> Replication lag >5s → <em>Mitigación:</em> Aumentar bandwidth VPN, optimizar queries on-prem</li>
+                        <li><strong>Riesgo 2:</strong> Application incompatibility → <em>Mitigación:</em> UAT extensivo en Week 3, fallback plan</li>
+                        <li><strong>Riesgo 3:</strong> Cutover >4h → <em>Mitigación:</em> Dry-run cutover en UAT, rollback en <30 min</li>
+                        <li><strong>Riesgo 4:</strong> Post-migration performance → <em>Mitigación:</em> Tuning plan, escalation to Microsoft Support</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-success">
+                    <strong>✅ Timeline Validado:</strong> El cronograma de 6 semanas está alineado con Azure best practices para migraciones 
+                    de bases de datos <500 GB con downtime mínimo. Incluye buffers de contingencia y fases de testing rigurosas.
+                </div>
+            </section>
+            
+            <section id="validation">
+                <h2>✅ Testing & Validation</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    Procedimientos de testing completos para garantizar que la migración cumple todos los 
+                    requisitos funcionales, de performance, seguridad y disponibilidad antes y después del cutover.
+                </p>
+                
+                <h3>1. Pre-Migration Testing (Week 3 - UAT)</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test Type</th>
+                            <th>Objetivo</th>
+                            <th>Herramientas</th>
+                            <th>Criterio de Éxito</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Functional Testing</strong></td>
+                            <td>Validar que todas las funcionalidades de la app funcionan correctamente en Azure</td>
+                            <td>SSMS, SQL Server Profiler, App UI testing</td>
+                            <td>100% de casos de uso críticos pasan</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Performance Baseline</strong></td>
+                            <td>Comparar performance Azure vs On-Premises</td>
+                            <td>Azure Monitor, SQL Query Store, DiskSpd</td>
+                            <td>Query response time ≤ on-prem baseline</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Load Testing</strong></td>
+                            <td>Validar que la VM soporta carga pico (12 cores @ 100%)</td>
+                            <td>Azure Load Testing, SQL Load Generator</td>
+                            <td>CPU <80%, RAM <90%, IOPS <2000 bajo carga</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Security Testing</strong></td>
+                            <td>Verificar que no hay vulnerabilidades y NSG rules son correctas</td>
+                            <td>Microsoft Defender, Nessus, NSG Flow Logs</td>
+                            <td>0 vulnerabilidades críticas, solo puertos necesarios abiertos</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Backup/Restore Testing</strong></td>
+                            <td>Validar que backups funcionan y restore es exitoso</td>
+                            <td>Azure Backup, RESTORE DATABASE</td>
+                            <td>Backup completo en <2h, restore exitoso con 0 errores</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>2. Post-Migration Validation (Week 5 - Post-Cutover)</h3>
+                
+                <div class="code-header">
+                    <span>PowerShell - Post-Cutover Validation Script</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># Post-Cutover Validation Checklist
+
+Write-Host "🔍 Post-Cutover Validation Started" -ForegroundColor Cyan
+
+# 1. Database Integrity Check
+Write-Host "\n1. Checking database integrity..." -ForegroundColor Yellow
+Invoke-Sqlcmd -Query "DBCC CHECKDB('YourDatabase') WITH NO_INFOMSGS" -ServerInstance "10.0.1.4" -Username "sqladmin"
+Write-Host "✅ DBCC CHECKDB passed" -ForegroundColor Green
+
+# 2. Row Count Validation
+Write-Host "\n2. Validating row counts..." -ForegroundColor Yellow
+$sourceRowCounts = @{
+    'Customers' = 150000
+    'Orders' = 2500000
+    'Products' = 50000
+}
+
+foreach ($table in $sourceRowCounts.Keys) {
+    $azureCount = (Invoke-Sqlcmd -Query "SELECT COUNT(*) as cnt FROM $table" -ServerInstance "10.0.1.4").cnt
+    $expectedCount = $sourceRowCounts[$table]
+    
+    if ($azureCount -eq $expectedCount) {
+        Write-Host "✅ $table: $azureCount rows (OK)" -ForegroundColor Green
+    } else {
+        Write-Host "❌ $table: Expected $expectedCount, Got $azureCount (MISMATCH)" -ForegroundColor Red
+        exit 1
+    }
+}
+
+# 3. Performance Check (Query Response Time)
+Write-Host "\n3. Performance baseline check..." -ForegroundColor Yellow
+$testQuery = "SELECT TOP 1000 * FROM Orders WHERE OrderDate > DATEADD(day, -30, GETDATE())"
+$startTime = Get-Date
+Invoke-Sqlcmd -Query $testQuery -ServerInstance "10.0.1.4" | Out-Null
+$duration = (Get-Date) - $startTime
+
+if ($duration.TotalMilliseconds -lt 500) {
+    Write-Host "✅ Query performance: $($duration.TotalMilliseconds)ms (OK)" -ForegroundColor Green
+} else {
+    Write-Host "⚠️  Query performance: $($duration.TotalMilliseconds)ms (SLOW)" -ForegroundColor Yellow
+}
+
+# 4. Application Connectivity Test
+Write-Host "\n4. Testing application connectivity..." -ForegroundColor Yellow
+$connectionString = "Server=10.0.1.4;Database=YourDatabase;User Id=appuser;Password=***;"
+try {
+    $conn = New-Object System.Data.SqlClient.SqlConnection($connectionString)
+    $conn.Open()
+    Write-Host "✅ Application connection successful" -ForegroundColor Green
+    $conn.Close()
+} catch {
+    Write-Host "❌ Application connection failed: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
+
+# 5. Azure Monitor Metrics Check
+Write-Host "\n5. Checking Azure Monitor metrics..." -ForegroundColor Yellow
+$metrics = az monitor metrics list \
+    --resource "/subscriptions/.../resourceGroups/rg-sqlmigration-prod-westeurope/providers/Microsoft.Compute/virtualMachines/vm-sql-prod" \
+    --metric "Percentage CPU" \
+    --start-time (Get-Date).AddHours(-1).ToString("yyyy-MM-ddTHH:mm:ss") \
+    --interval PT1M \
+    | ConvertFrom-Json
+
+$avgCpu = ($metrics.value.timeseries.data | Measure-Object -Property average -Average).Average
+Write-Host "CPU Average (last hour): $avgCpu%" -ForegroundColor Cyan
+
+if ($avgCpu -lt 80) {
+    Write-Host "✅ CPU utilization healthy" -ForegroundColor Green
+} else {
+    Write-Host "⚠️  CPU utilization high" -ForegroundColor Yellow
+}
+
+Write-Host "\n✅ All post-cutover validations passed!" -ForegroundColor Green</code></pre>
+                </div>
+                
+                <h3>3. Smoke Tests Checklist</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test</th>
+                            <th>Comando/Acción</th>
+                            <th>Resultado Esperado</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SQL Server Running</td>
+                            <td><code>SELECT @@VERSION</code></td>
+                            <td>Returns SQL Server 2025 version</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Database Online</td>
+                            <td><code>SELECT state_desc FROM sys.databases WHERE name='YourDB'</code></td>
+                            <td>ONLINE</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Connectivity from App</td>
+                            <td>Test connection string from app server</td>
+                            <td>Connection successful</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Key Tables Exist</td>
+                            <td><code>SELECT COUNT(*) FROM sys.tables</code></td>
+                            <td>Expected table count</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Logins Created</td>
+                            <td><code>SELECT name FROM sys.server_principals WHERE type='S'</code></td>
+                            <td>All app logins present</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Azure Backup Policy</td>
+                            <td>Azure Portal → Recovery Services Vault → Backup Items</td>
+                            <td>VM protected, last backup successful</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Monitoring Alerts Active</td>
+                            <td>Azure Portal → Monitor → Alerts</td>
+                            <td>CPU/RAM/Disk alerts configured</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Log Analytics Ingesting</td>
+                            <td>Azure Portal → Log Analytics → Logs → <code>Heartbeat | summarize count() by Computer</code></td>
+                            <td>VM sending logs</td>
+                            <td>☐</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="alert alert-success">
+                    <strong>✅ Validation Completada:</strong> Todos los tests críticos deben pasar antes de considerar 
+                    la migración exitosa. Cualquier fallo debe ser resuelto inmediatamente o activar el rollback plan.
+                </div>
+            </section>
+            
+            <section id="rollback">
+                <h2>🔄 Rollback Plan</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    Procedimiento de emergencia para revertir la migración y volver al entorno on-premises 
+                    en caso de problemas críticos durante o después del cutover. Tiempo objetivo: <strong><30 minutos</strong>.
+                </p>
+                
+                <div class="alert alert-danger">
+                    <strong>🚨 Criterios para Activar Rollback:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Data integrity issues detectados (checksums no coinciden)</li>
+                        <li>Performance degradation >50% vs baseline</li>
+                        <li>Application critical errors (500 errors, timeouts)</li>
+                        <li>Data loss detectado (row counts no coinciden)</li>
+                        <li>Cutover window >4 horas sin resolución</li>
+                        <li>Decisión de stakeholders (Go/No-Go committee)</li>
+                    </ul>
+                </div>
+                
+                <h3>Rollback Procedure (DMS Online Migration)</h3>
+                
+                <div class="code-header">
+                    <span>PowerShell - Rollback Execution</span>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">📋 Copiar</button>
+                </div>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># ROLLBACK PLAN - Execute Only If Cutover Fails
+
+Write-Host "🚨 ROLLBACK INITIATED" -ForegroundColor Red -BackgroundColor Yellow
+$rollbackStart = Get-Date
+
+# Step 1: STOP applications immediately
+Write-Host "\nStep 1: Stopping applications..." -ForegroundColor Yellow
+# Execute application shutdown scripts
+Invoke-Command -ComputerName "app-server-01" -ScriptBlock { Stop-Service -Name "YourAppService" -Force }
+Write-Host "✅ Applications stopped" -ForegroundColor Green
+
+# Step 2: Verify on-premises SQL Server is still running
+Write-Host "\nStep 2: Checking on-premises SQL Server status..." -ForegroundColor Yellow
+$onpremStatus = Invoke-Sqlcmd -Query "SELECT @@SERVERNAME as Server, @@VERSION as Version" -ServerInstance "onprem-sql-server"
+if ($onpremStatus) {
+    Write-Host "✅ On-premises SQL Server is ONLINE" -ForegroundColor Green
+    Write-Host "   Server: $($onpremStatus.Server)" -ForegroundColor Cyan
+} else {
+    Write-Host "❌ On-premises SQL Server NOT responding!" -ForegroundColor Red
+    Write-Host "⚠️  CRITICAL: Cannot rollback, escalate immediately!" -ForegroundColor Red
+    exit 1
+}
+
+# Step 3: Verify data integrity on on-premises
+Write-Host "\nStep 3: Validating on-premises data integrity..." -ForegroundColor Yellow
+$integrityCheck = Invoke-Sqlcmd -Query "DBCC CHECKDB('YourDatabase') WITH NO_INFOMSGS" -ServerInstance "onprem-sql-server"
+Write-Host "✅ On-premises database integrity: OK" -ForegroundColor Green
+
+# Step 4: Update application connection strings to point back to on-premises
+Write-Host "\nStep 4: Reverting connection strings to on-premises..." -ForegroundColor Yellow
+$onpremConnectionString = "Server=onprem-sql-server;Database=YourDatabase;Integrated Security=true;"
+# Update web.config or app settings
+Invoke-Command -ComputerName "app-server-01" -ScriptBlock {
+    param($connString)
+    $config = "C:\inetpub\wwwroot\YourApp\web.config"
+    (Get-Content $config) -replace 'Server=10.0.1.4', 'Server=onprem-sql-server' | Set-Content $config
+} -ArgumentList $onpremConnectionString
+Write-Host "✅ Connection strings reverted" -ForegroundColor Green
+
+# Step 5: Restart applications pointing to on-premises
+Write-Host "\nStep 5: Restarting applications (on-premises mode)..." -ForegroundColor Yellow
+Invoke-Command -ComputerName "app-server-01" -ScriptBlock { Start-Service -Name "YourAppService" }
+Start-Sleep -Seconds 10
+Write-Host "✅ Applications restarted" -ForegroundColor Green
+
+# Step 6: Test application connectivity
+Write-Host "\nStep 6: Testing application connectivity..." -ForegroundColor Yellow
+try {
+    $response = Invoke-WebRequest -Uri "http://app-server-01/health" -UseBasicParsing
+    if ($response.StatusCode -eq 200) {
+        Write-Host "✅ Application health check: PASSED" -ForegroundColor Green
+    }
+} catch {
+    Write-Host "⚠️  Application health check failed, investigating..." -ForegroundColor Yellow
+}
+
+# Step 7: Notify stakeholders
+Write-Host "\nStep 7: Notifying stakeholders..." -ForegroundColor Yellow
+$rollbackEnd = Get-Date
+$rollbackDuration = ($rollbackEnd - $rollbackStart).TotalMinutes
+
+$message = @"
+ROLLBACK COMPLETED
+
+Start Time: $rollbackStart
+End Time: $rollbackEnd
+Duration: $($rollbackDuration.ToString('0.00')) minutes
+
+Status: Applications running on on-premises SQL Server
+Next Steps: Root cause analysis, re-plan migration
+"@
+
+Write-Host $message -ForegroundColor Cyan
+
+# Send email/Teams notification
+Send-MailMessage -To "migration-team@company.com" -From "azure-alerts@company.com" `
+    -Subject "🚨 ROLLBACK COMPLETED - Migration Reverted" `
+    -Body $message -SmtpServer "smtp.company.com"
+
+Write-Host "\n✅ ROLLBACK SUCCESSFUL - System reverted to on-premises" -ForegroundColor Green</code></pre>
+                </div>
+                
+                <h3>Rollback Decision Matrix</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Issue</th>
+                            <th>Severity</th>
+                            <th>Rollback Decision</th>
+                            <th>Alternative Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #ffebee;">
+                            <td>Data loss detected</td>
+                            <td>🔴 CRITICAL</td>
+                            <td><strong>IMMEDIATE ROLLBACK</strong></td>
+                            <td>N/A - No alternative</td>
+                        </tr>
+                        <tr style="background: #ffebee;">
+                            <td>Checksums mismatch</td>
+                            <td>🔴 CRITICAL</td>
+                            <td><strong>IMMEDIATE ROLLBACK</strong></td>
+                            <td>N/A - Data integrity compromised</td>
+                        </tr>
+                        <tr style="background: #fff3e0;">
+                            <td>Performance <50% baseline</td>
+                            <td>🟡 HIGH</td>
+                            <td><strong>ROLLBACK in 30 min</strong> if not resolved</td>
+                            <td>Quick tuning: indices, statistics, TempDB</td>
+                        </tr>
+                        <tr style="background: #fff3e0;">
+                            <td>Application errors >10%</td>
+                            <td>🟡 HIGH</td>
+                            <td><strong>ROLLBACK in 1 hour</strong> if not resolved</td>
+                            <td>Fix connection strings, app config issues</td>
+                        </tr>
+                        <tr style="background: #e8f5e9;">
+                            <td>Minor query timeouts</td>
+                            <td>🟢 MEDIUM</td>
+                            <td><strong>CONTINUE</strong> with monitoring</td>
+                            <td>Performance tuning post-cutover</td>
+                        </tr>
+                        <tr style="background: #e8f5e9;">
+                            <td>Non-critical app features failing</td>
+                            <td>🟢 LOW</td>
+                            <td><strong>CONTINUE</strong> with workaround</td>
+                            <td>Hotfix non-critical features</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Post-Rollback Actions</h3>
+                
+                <ol style="font-size: 1rem; line-height: 2;">
+                    <li><strong>Root Cause Analysis (RCA):</strong> Investigar qué causó el fallo (dentro de 24h)</li>
+                    <li><strong>Data Validation:</strong> Verificar integridad de datos on-premises después del rollback</li>
+                    <li><strong>Stakeholder Meeting:</strong> Presentar RCA y plan de remediación</li>
+                    <li><strong>Azure Resources:</strong> Decidir si mantener o eliminar infraestructura Azure</li>
+                    <li><strong>Re-plan Migration:</strong> Ajustar timeline y procedimientos basado en lessons learned</li>
+                    <li><strong>Testing Adicional:</strong> Reproducir el issue en UAT antes de re-intentar</li>
+                </ol>
+                
+                <div class="alert alert-warning">
+                    <strong>⏱️ Rollback SLA:</strong> El rollback completo debe completarse en <strong><30 minutos</strong> 
+                    desde la decisión hasta aplicaciones operativas en on-premises. Práctica del rollback durante UAT es obligatoria.
+                </div>
+            </section>
+            
+            <section id="troubleshooting">
+                <h2>🛠️ Troubleshooting Common Issues</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+                    Soluciones a problemas comunes durante la migración. Basado en Azure best practices y 
+                    experiencia de migraciones reales SQL Server → Azure.
+                </p>
+                
+                <h3>Issue 1: DMS Replication Lag >5 Seconds</h3>
+                <div class="alert alert-warning">
+                    <strong>🔍 Síntoma:</strong> Replication lag aumenta constantemente y no converge a <5s
+                </div>
+                <strong>Causas Posibles:</strong>
+                <ul>
+                    <li>Bandwidth insuficiente en VPN/ExpressRoute</li>
+                    <li>Transacciones largas bloqueando CDC</li>
+                    <li>Indices faltantes en source database</li>
+                    <li>Target VM con CPU/IOPS insuficientes</li>
+                </ul>
+                <strong>Solución:</strong>
+                <div class="code-wrapper">
+                    <pre><code class="language-sql">-- 1. Identificar transacciones largas (source)
+SELECT 
+    session_id, 
+    transaction_id,
+    DATEDIFF(SECOND, transaction_begin_time, GETDATE()) as duration_seconds,
+    database_name,
+    host_name,
+    program_name
+FROM sys.dm_tran_active_transactions t
+JOIN sys.dm_tran_session_transactions st ON t.transaction_id = st.transaction_id
+JOIN sys.dm_exec_sessions s ON st.session_id = s.session_id
+WHERE DATEDIFF(SECOND, transaction_begin_time, GETDATE()) > 300  -- >5 min
+ORDER BY duration_seconds DESC;
+
+-- 2. Verificar indices faltantes
+SELECT 
+    migs.avg_user_impact,
+    migs.avg_total_user_cost,
+    migs.user_seeks + migs.user_scans as total_reads,
+    mid.statement as table_name,
+    mid.equality_columns,
+    mid.inequality_columns,
+    mid.included_columns
+FROM sys.dm_db_missing_index_details mid
+JOIN sys.dm_db_missing_index_groups mig ON mid.index_handle = mig.index_handle
+JOIN sys.dm_db_missing_index_group_stats migs ON mig.index_group_handle = migs.group_handle
+WHERE migs.avg_user_impact > 50
+ORDER BY migs.avg_user_impact DESC;</code></pre>
+                </div>
+                <strong>Acciones:</strong>
+                <ol>
+                    <li>Aumentar bandwidth: Upgrade VPN o migrar a ExpressRoute</li>
+                    <li>Crear indices faltantes con alto impact</li>
+                    <li>Commit transacciones largas antes de replication</li>
+                    <li>Escalar target VM temporalmente (E32ds_v5 durante replication)</li>
+                </ol>
+                <br>
+                
+                <h3>Issue 2: Orphaned Users After Migration</h3>
+                <div class="alert alert-warning">
+                    <strong>🔍 Síntoma:</strong> Applications no pueden conectar, error "Login failed for user 'appuser'"
+                </div>
+                <strong>Causa:</strong> Logins (server-level) y users (database-level) con SIDs desincronizados después de restore.
+                <br><br>
+                <strong>Solución:</strong>
+                <div class="code-wrapper">
+                    <pre><code class="language-sql">-- 1. Identificar orphaned users
+USE YourDatabase;
+GO
+
+SELECT 
+    dp.name AS [database_user],
+    dp.type_desc,
+    dp.default_schema_name,
+    'ORPHANED' as status
+FROM sys.database_principals dp
+LEFT JOIN sys.server_principals sp ON dp.sid = sp.sid
+WHERE dp.type IN ('S', 'U', 'G')  -- SQL user, Windows user, Windows group
+    AND sp.sid IS NULL
+    AND dp.name NOT IN ('dbo', 'guest', 'INFORMATION_SCHEMA', 'sys');
+
+-- 2. Fix orphaned users automáticamente
+EXEC sp_change_users_login 'Auto_Fix', 'appuser';
+
+-- 3. Si el login no existe, crearlo primero
+CREATE LOGIN appuser WITH PASSWORD = 'SecureP@ssw0rd!';
+EXEC sp_change_users_login 'Update_One', 'appuser', 'appuser';
+
+-- 4. Verificar mappings correctos
+SELECT 
+    dp.name AS database_user,
+    sp.name AS server_login,
+    dp.type_desc
+FROM sys.database_principals dp
+JOIN sys.server_principals sp ON dp.sid = sp.sid
+WHERE dp.type IN ('S', 'U', 'G');</code></pre>
+                </div>
+                <br>
+                
+                <h3>Issue 3: Performance Degradation Post-Migration</h3>
+                <div class="alert alert-warning">
+                    <strong>🔍 Síntoma:</strong> Queries significativamente más lentas en Azure vs on-premises
+                </div>
+                <strong>Causas Comunes:</strong>
+                <ul>
+                    <li>Statistics desactualizadas después de restore</li>
+                    <li>TempDB no optimizado (todavía en C: en lugar de D:)</li>
+                    <li>Indices fragmentados (>30%)</li>
+                    <li>Max Server Memory no configurado</li>
+                    <li>Azure Storage Throttling (IOPS limits alcanzados)</li>
+                </ul>
+                <strong>Solución:</strong>
+                <div class="code-wrapper">
+                    <pre><code class="language-sql">-- 1. Update statistics en todas las tablas
+EXEC sp_MSforeachtable 'UPDATE STATISTICS ? WITH FULLSCAN';
+
+-- 2. Rebuild indices fragmentados
+SELECT 
+    OBJECT_NAME(ps.object_id) AS TableName,
+    i.name AS IndexName,
+    ps.avg_fragmentation_in_percent,
+    ps.page_count
+FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'SAMPLED') ps
+JOIN sys.indexes i ON ps.object_id = i.object_id AND ps.index_id = i.index_id
+WHERE ps.avg_fragmentation_in_percent > 30
+    AND ps.page_count > 1000
+ORDER BY ps.avg_fragmentation_in_percent DESC;
+
+-- Rebuild indices >30% fragmentation
+ALTER INDEX ALL ON YourTable REBUILD WITH (ONLINE = ON, MAXDOP = 4);
+
+-- 3. Configurar Max Server Memory (80% de RAM total)
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'max server memory (MB)', 102400;  -- 100 GB para VM con 128 GB RAM
+RECONFIGURE;
+
+-- 4. Verificar TempDB en D:\ (local SSD)
+SELECT name, physical_name FROM sys.master_files WHERE database_id = 2;  -- TempDB
+-- Si está en C:\, mover a D:\ con ALTER DATABASE</code></pre>
+                </div>
+                <strong>Verificar Azure Storage Throttling:</strong>
+                <div class="code-wrapper">
+                    <pre><code class="language-bash"># Azure CLI - Check disk throttling metrics
+az monitor metrics list \
+    --resource "/subscriptions/.../providers/Microsoft.Compute/disks/disk-data-sql-prod" \
+    --metric "Composite Disk Operations/sec" \
+    --aggregation Average Maximum \
+    --interval PT1M \
+    --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) \
+    | jq '.value[].timeseries[].data[] | select(.maximum > 2200)'  # P20 limit es 2300 IOPS
+
+# Si hay throttling, escalar a P30 (5000 IOPS)
+az disk update \
+    --resource-group rg-sqlmigration-prod-westeurope \
+    --name disk-data-sql-prod \
+    --sku Premium_LRS \
+    --size-gb 1024  # P30</code></pre>
+                </div>
+                <br>
+                
+                <h3>Issue 4: Azure Bastion Connection Timeout</h3>
+                <div class="alert alert-warning">
+                    <strong>🔍 Síntoma:</strong> No se puede conectar a la VM via Bastion, timeout después de 30s
+                </div>
+                <strong>Solución:</strong>
+                <ol>
+                    <li><strong>Verificar NSG rules:</strong> Subnet Bastion debe permitir outbound a VirtualNetwork:22,3389</li>
+                    <li><strong>Verificar VM Running:</strong> <code>az vm get-instance-view --name vm-sql-prod --query instanceView.statuses</code></li>
+                    <li><strong>Verificar Bastion subnet:</strong> Debe ser /27 o mayor, named "AzureBastionSubnet"</li>
+                    <li><strong>Check Bastion logs:</strong> Azure Portal → Bastion → Diagnostic settings → AzureBastionAuditLogs</li>
+                </ol>
+                <br>
+                
+                <h3>Issue 5: DMS Migration Stuck at "Preparing"</h3>
+                <div class="alert alert-warning">
+                    <strong>🔍 Síntoma:</strong> DMS task stuck en estado "Preparing" por >30 minutos
+                </div>
+                <strong>Causas:</strong>
+                <ul>
+                    <li>Firewall bloqueando puerto 1433 desde DMS subnet</li>
+                    <li>SQL Server TCP/IP disabled en source</li>
+                    <li>Credentials incorrectas (no sysadmin)</li>
+                </ul>
+                <strong>Solución:</strong>
+                <div class="code-wrapper">
+                    <pre><code class="language-powershell"># 1. Verificar conectividad desde DMS subnet a source SQL
+Test-NetConnection -ComputerName "onprem-sql-server" -Port 1433
+
+# 2. Verificar TCP/IP enabled en source SQL Server
+Invoke-Sqlcmd -Query @"
+EXEC xp_readerrorlog 0, 1, 'Server is listening on', 'TCP'
+"@ -ServerInstance "onprem-sql-server"
+
+# 3. Verificar permisos del login DMS
+Invoke-Sqlcmd -Query @"
+SELECT 
+    r.name AS [role],
+    m.name AS [member]
+FROM sys.server_role_members rm
+JOIN sys.server_principals r ON rm.role_principal_id = r.principal_id
+JOIN sys.server_principals m ON rm.member_principal_id = m.principal_id
+WHERE m.name = 'dms_user';
+"@ -ServerInstance "onprem-sql-server"
+# Debe estar en sysadmin role
+
+# 4. Cancel y recreate DMS task
+az dms project task cancel --project-name sqlmigration-project \
+    --service-name dms-sqlmigration-prod \
+    --resource-group rg-sqlmigration-prod-westeurope \
+    --name migration-task-001
+
+# Recreate con credentials verificadas</code></pre>
+                </div>
+                <br>
+                
+                <h3>Recursos de Soporte Adicionales</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Recurso</th>
+                            <th>URL / Contacto</th>
+                            <th>Uso</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Microsoft Support</strong></td>
+                            <td><a href="https://portal.azure.com/#blade/Microsoft_Azure_Support/HelpAndSupportBlade" target="_blank">Azure Portal → Support</a></td>
+                            <td>Issues críticos 24/7, respuesta <4h</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Azure Migration Docs</strong></td>
+                            <td><a href="https://learn.microsoft.com/azure/dms/" target="_blank">learn.microsoft.com/azure/dms</a></td>
+                            <td>Documentación oficial DMS</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SQL Server Forums</strong></td>
+                            <td><a href="https://techcommunity.microsoft.com/t5/sql-server/ct-p/SQLServer" target="_blank">Tech Community</a></td>
+                            <td>Community troubleshooting</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Azure Status</strong></td>
+                            <td><a href="https://status.azure.com" target="_blank">status.azure.com</a></td>
+                            <td>Verificar outages de Azure</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="alert alert-info">
+                    <strong>💡 Pro Tip:</strong> Documentar todos los issues y sus resoluciones durante la migración. 
+                    Crear un knowledge base interno para futuras migraciones. Incluir tiempos de resolución y lessons learned.
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <footer>
+        <p><strong>Azure Architect Pro</strong> | Guía Operativa de Migración v1.0</p>
+        <p>Basado en 22 horas de monitorización real y Azure best practices</p>
+    </footer>
+    
+    <!-- Initialize Mermaid.js -->
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#0078D4',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#005A9E',
+                lineColor: '#6c757d',
+                secondaryColor: '#28a745',
+                tertiaryColor: '#fd7e14'
+            }
+        });
+    </script>
+    
+    <!-- Prism.js for Syntax Highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-powershell.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    
+    <!-- Copy to Clipboard Functionality -->
+    <script>
+        function copyToClipboard(button) {
+            const codeBlock = button.closest('.code-wrapper').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                button.textContent = '✅ Copiado';
+                setTimeout(() => {
+                    button.textContent = '📋 Copiar';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

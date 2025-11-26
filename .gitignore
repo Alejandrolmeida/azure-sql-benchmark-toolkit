@@ -1,0 +1,117 @@
+# Azure SQL Benchmark Toolkit - .gitignore
+
+# Benchmark Data (exclude customer data by default)
+customers/*/benchmarks/*/sql_workload_*.json
+customers/*/benchmarks/*/*.csv
+
+# Customer-specific configuration (contains passwords)
+customers/*/config/client-config.env
+!customers/.example-client/config/client-config.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+benchmark.log
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+.cache/
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Azure credentials
+.azure/
+*.publishsettings
+
+# SSH keys
+*.pem
+*.key
+id_rsa*
+
+# Environment variables (may contain secrets)
+.env
+.env.local
+*.env.local
+
+# Except example
+!customers/.example-client/
+
+# Test outputs
+test-results/
+coverage/
+.coverage
+htmlcov/
+
+# Node modules (if any JS tooling added)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Large files
+*.iso
+*.vhd
+*.vhdx
+
+# Backup files
+*~
+*.bak
+*.backup
+*.old

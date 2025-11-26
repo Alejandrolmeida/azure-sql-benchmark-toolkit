@@ -1,0 +1,356 @@
+name: Validate Project Structure
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate-structure:
+    name: Validate Directory Structure
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check required directories
+        run: |
+          echo "🔍 Validating project structure..."
+          
+          # Check main directories
+          for dir in tools customers templates docs config .github; do
+            if [ -d "$dir" ]; then
+              echo "✅ Directory exists: $dir"
+            else
+              echo "❌ Missing directory: $dir"
+              exit 1
+            fi
+          done
+          
+          # Check subdirectories
+          for dir in tools/monitoring tools/utils tools/analysis; do
+            if [ -d "$dir" ]; then
+              echo "✅ Directory exists: $dir"
+            else
+              echo "❌ Missing directory: $dir"
+              exit 1
+            fi
+          done
+      
+      - name: Check required files
+        run: |
+          echo "🔍 Checking required files..."
+          
+          # Core files
+          for file in README.md LICENSE mcp.json; do
+            if [ -f "$file" ]; then
+              echo "✅ File exists: $file"
+            else
+              echo "❌ Missing file: $file"
+              exit 1
+            fi
+          done
+          
+          # Tools
+          for file in tools/monitoring/monitor_sql_workload.py tools/utils/create_client.sh tools/utils/run_benchmark.sh tools/utils/generate_reports.sh; do
+            if [ -f "$file" ]; then
+              echo "✅ File exists: $file"
+            else
+              echo "❌ Missing file: $file"
+              exit 1
+            fi
+          done
+          
+          # Templates
+          for file in templates/benchmark-performance-report.html templates/cost-analysis-report.html templates/migration-operations-guide.html; do
+            if [ -f "$file" ]; then
+              echo "✅ File exists: $file"
+            else
+              echo "❌ Missing file: $file"
+              exit 1
+            fi
+          done
+      
+      - name: Validate shell scripts
+        run: |
+          echo "🔍 Validating shell scripts syntax..."
+          
+          for script in tools/utils/*.sh; do
+            if [ -f "$script" ]; then
+              echo "Checking: $script"
+              bash -n "$script"
+              if [ $? -eq 0 ]; then
+                echo "✅ Syntax OK: $script"
+              else
+                echo "❌ Syntax error: $script"
+                exit 1
+              fi
+            fi
+          done
+      
+      - name: Check script permissions
+        run: |
+          echo "🔍 Checking executable permissions..."
+          
+          for script in tools/utils/*.sh tools/monitoring/*.py; do
+            if [ -f "$script" ]; then
+              if [ -x "$script" ]; then
+                echo "✅ Executable: $script"
+              else
+                echo "⚠️  Not executable: $script"
+              fi
+            fi
+          done
+
+  validate-python:
+    name: Validate Python Scripts
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyodbc pylint
+      
+      - name: Lint Python code
+        run: |
+          echo "🔍 Linting Python scripts..."
+          
+          for script in tools/monitoring/*.py; do
+            if [ -f "$script" ]; then
+              echo "Linting: $script"
+              pylint --disable=C0114,C0115,C0116 "$script" || true
+            fi
+          done
+      
+      - name: Check Python syntax
+        run: |
+          echo "🔍 Checking Python syntax..."
+          
+          for script in tools/monitoring/*.py; do
+            if [ -f "$script" ]; then
+              echo "Checking: $script"
+              python -m py_compile "$script"
+              if [ $? -eq 0 ]; then
+                echo "✅ Syntax OK: $script"
+              else
+                echo "❌ Syntax error: $script"
+                exit 1
+              fi
+            fi
+          done
+
+  validate-documentation:
+    name: Validate Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check README files
+        run: |
+          echo "🔍 Checking README files..."
+          
+          # Main README
+          if [ -f "README.md" ]; then
+            wc -l README.md
+            echo "✅ Main README.md found ($(wc -l < README.md) lines)"
+          else
+            echo "❌ Main README.md missing"
+            exit 1
+          fi
+          
+          # Example client README
+          if [ -f "customers/.example-client/README.md" ]; then
+            echo "✅ Example client README.md found"
+          else
+            echo "❌ Example client README.md missing"
+            exit 1
+          fi
+      
+      - name: Check documentation directory
+        run: |
+          echo "🔍 Checking docs directory..."
+          
+          if [ -d "docs" ]; then
+            echo "✅ docs/ directory exists"
+            echo "Files in docs/:"
+            ls -la docs/
+          else
+            echo "❌ docs/ directory missing"
+            exit 1
+          fi
+      
+      - name: Validate markdown links (if markdownlint available)
+        run: |
+          # Optional: Add markdown linting here
+          echo "ℹ️  Markdown linting skipped (optional enhancement)"
+
+  validate-templates:
+    name: Validate HTML Templates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check HTML templates
+        run: |
+          echo "🔍 Validating HTML templates..."
+          
+          for template in templates/*.html; do
+            if [ -f "$template" ]; then
+              # Check file size (should be > 1KB)
+              size=$(wc -c < "$template")
+              if [ "$size" -gt 1024 ]; then
+                echo "✅ Template OK: $template ($size bytes)"
+              else
+                echo "⚠️  Template suspiciously small: $template ($size bytes)"
+              fi
+              
+              # Check for basic HTML structure
+              if grep -q "<!DOCTYPE html>" "$template"; then
+                echo "✅ Valid HTML DOCTYPE: $template"
+              else
+                echo "⚠️  Missing DOCTYPE: $template"
+              fi
+            fi
+          done
+
+  validate-example-client:
+    name: Validate Example Client
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check example client structure
+        run: |
+          echo "🔍 Validating example client..."
+          
+          CLIENT_DIR="customers/.example-client"
+          
+          if [ ! -d "$CLIENT_DIR" ]; then
+            echo "❌ Example client directory missing"
+            exit 1
+          fi
+          
+          # Check subdirectories
+          for dir in config benchmarks docs; do
+            if [ -d "$CLIENT_DIR/$dir" ]; then
+              echo "✅ Directory exists: $CLIENT_DIR/$dir"
+            else
+              echo "❌ Missing directory: $CLIENT_DIR/$dir"
+              exit 1
+            fi
+          done
+          
+          # Check files
+          if [ -f "$CLIENT_DIR/README.md" ]; then
+            echo "✅ Example client README exists"
+          else
+            echo "❌ Example client README missing"
+            exit 1
+          fi
+      
+      - name: Check benchmark data
+        run: |
+          echo "🔍 Checking benchmark data..."
+          
+          BENCHMARK_DIR="customers/.example-client/benchmarks/2025-11-20"
+          
+          if [ -d "$BENCHMARK_DIR" ]; then
+            echo "✅ Benchmark directory exists"
+            
+            # Check for JSON file
+            if ls $BENCHMARK_DIR/*.json 1> /dev/null 2>&1; then
+              echo "✅ Benchmark JSON file found"
+              JSON_FILE=$(ls $BENCHMARK_DIR/*.json | head -1)
+              size=$(wc -c < "$JSON_FILE")
+              echo "   Size: $size bytes"
+            else
+              echo "❌ No benchmark JSON file found"
+              exit 1
+            fi
+            
+            # Check for HTML reports
+            for report in benchmark-performance-report.html cost-analysis-report.html migration-operations-guide.html; do
+              if [ -f "$BENCHMARK_DIR/$report" ]; then
+                echo "✅ Report exists: $report"
+              else
+                echo "⚠️  Report missing: $report"
+              fi
+            done
+          else
+            echo "❌ Benchmark directory missing"
+            exit 1
+          fi
+
+  summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-structure, validate-python, validate-documentation, validate-templates, validate-example-client]
+    if: always()
+    
+    steps:
+      - name: Check job results
+        run: |
+          echo "📊 Validation Summary"
+          echo "===================="
+          
+          if [ "${{ needs.validate-structure.result }}" = "success" ]; then
+            echo "✅ Structure validation: PASSED"
+          else
+            echo "❌ Structure validation: FAILED"
+          fi
+          
+          if [ "${{ needs.validate-python.result }}" = "success" ]; then
+            echo "✅ Python validation: PASSED"
+          else
+            echo "❌ Python validation: FAILED"
+          fi
+          
+          if [ "${{ needs.validate-documentation.result }}" = "success" ]; then
+            echo "✅ Documentation validation: PASSED"
+          else
+            echo "❌ Documentation validation: FAILED"
+          fi
+          
+          if [ "${{ needs.validate-templates.result }}" = "success" ]; then
+            echo "✅ Templates validation: PASSED"
+          else
+            echo "❌ Templates validation: FAILED"
+          fi
+          
+          if [ "${{ needs.validate-example-client.result }}" = "success" ]; then
+            echo "✅ Example client validation: PASSED"
+          else
+            echo "❌ Example client validation: FAILED"
+          fi
+          
+          # Fail if any job failed
+          if [ "${{ needs.validate-structure.result }}" != "success" ] || \
+             [ "${{ needs.validate-python.result }}" != "success" ] || \
+             [ "${{ needs.validate-documentation.result }}" != "success" ] || \
+             [ "${{ needs.validate-templates.result }}" != "success" ] || \
+             [ "${{ needs.validate-example-client.result }}" != "success" ]; then
+            echo ""
+            echo "❌ VALIDATION FAILED"
+            exit 1
+          else
+            echo ""
+            echo "✅ ALL VALIDATIONS PASSED"
+          fi
