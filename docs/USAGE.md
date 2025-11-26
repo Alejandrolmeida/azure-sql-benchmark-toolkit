@@ -532,7 +532,7 @@ customers/
 ❌ **No hacer:**
 - Hardcodear passwords en scripts
 - Usar cuenta `sa` para benchmarks
-- Compartir credenciales por email
+- Compartir credenciales de forma insegura
 - Dejar passwords en logs
 
 ## 📞 Soporte y Recursos

@@ -319,7 +319,8 @@ Ver [CONTRIBUTING.md](CONTRIBUTING.md) para más detalles.
 
 - **GitHub Issues**: Bug reports y feature requests
 - **GitHub Discussions**: Preguntas y comunidad
-- **Email**: alejandro.almeida@example.com
+- **X (Twitter)**: [@alejandrolmeida](https://x.com/alejandrolmeida) - DM para temas privados
+- **LinkedIn**: [alejandrolmeida](https://linkedin.com/in/alejandrolmeida) - DM para temas privados
 - **Documentation**: [docs/](https://github.com/alejandrolmeida/azure-sql-benchmark-toolkit/tree/main/docs)
 
 ---

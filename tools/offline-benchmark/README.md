@@ -568,7 +568,7 @@ MIT License - Ver [LICENSE](../../LICENSE) en el repositorio principal.
 - [ ] PowerShell workload generator equivalente
 - [ ] GUI para Windows (Tkinter)
 - [ ] Integración con Azure Blob Storage
-- [ ] Notificaciones email en completado
+- [ ] Notificaciones Teams/Slack en completado
 
 ### v2.3.0 (Q3 2025)
 - [ ] Análisis de trends en el propio tool

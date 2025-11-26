@@ -315,7 +315,8 @@ Todos los contributors serán añadidos al README.md:
 ## Preguntas?
 
 - 💬 [GitHub Discussions](https://github.com/alejandrolmeida/azure-sql-benchmark-toolkit/discussions)
-- 📧 alejandro.almeida@example.com
+- 🐦 X (Twitter): [@alejandrolmeida](https://x.com/alejandrolmeida) - DM para temas privados
+- 💼 LinkedIn: [alejandrolmeida](https://linkedin.com/in/alejandrolmeida) - DM para temas privados
 - 🐛 [Report Issues](https://github.com/alejandrolmeida/azure-sql-benchmark-toolkit/issues)
 
 ---

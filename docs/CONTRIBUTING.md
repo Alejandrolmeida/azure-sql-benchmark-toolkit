@@ -110,7 +110,10 @@ Cualquier otra información relevante.
 
 🚨 **NO reportes bugs de seguridad en Issues públicos**.
 
-Envía email a: alejandro.almeida@example.com
+Contacta vía:
+- GitHub Security Advisories (preferido)
+- X (Twitter) DM: [@alejandrolmeida](https://x.com/alejandrolmeida)
+- LinkedIn DM: [alejandrolmeida](https://linkedin.com/in/alejandrolmeida)
 
 Ver [SECURITY.md](../SECURITY.md) para más detalles.
 

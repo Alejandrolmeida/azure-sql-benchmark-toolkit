@@ -448,7 +448,7 @@ azure-sql-benchmark-toolkit/
 **Razones:**
 - ✅ No requiere servidor web
 - ✅ Abrir directamente en navegador
-- ✅ Enviar por email fácilmente
+- ✅ Compartir fácilmente (Teams, OneDrive, SharePoint)
 - ✅ Offline-friendly (CDN con fallback)
 - ✅ Impresión/PDF nativa del navegador
 

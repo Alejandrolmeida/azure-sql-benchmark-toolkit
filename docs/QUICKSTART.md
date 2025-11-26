@@ -280,7 +280,7 @@ Abre cualquiera de los 3 informes HTML con tu navegador preferido.
 - Añade costos on-premises reales
 
 ### 3. Compartir con Stakeholders
-- Envía informes HTML por email
+- Comparte informes HTML (Teams, OneDrive, SharePoint)
 - Presenta en reuniones
 - Documenta decisiones
 

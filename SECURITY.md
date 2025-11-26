@@ -147,7 +147,10 @@ git check-ignore -v customers/*/config/client-config.env
 Si encuentras una vulnerabilidad de seguridad:
 
 1. **NO** abras un issue público
-2. Contacta directamente: [tu-email@example.com]
+2. Contacta vía:
+   - GitHub Security Advisories: https://github.com/alejandrolmeida/azure-sql-benchmark-toolkit/security/advisories (preferido)
+   - X (Twitter) DM: [@alejandrolmeida](https://x.com/alejandrolmeida)
+   - LinkedIn DM: [alejandrolmeida](https://linkedin.com/in/alejandrolmeida)
 3. Incluye detalles del problema y pasos para reproducir
 4. Espera confirmación antes de divulgar públicamente
 
