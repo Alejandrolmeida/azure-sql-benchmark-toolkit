@@ -68,7 +68,7 @@ Edita `customers/nombre-cliente/config/client-config.env`:
 # Información del Cliente
 CLIENT_NAME="Contoso Manufacturing"
 CLIENT_INDUSTRY="Manufacturing"
-CLIENT_CONTACT="john.doe@contoso.com"
+CLIENT_CONTACT="#proyecto-sql-migration"  # Canal Teams/Slack del cliente
 
 # SQL Server
 SQL_SERVER="sql-prod-01.contoso.local"
