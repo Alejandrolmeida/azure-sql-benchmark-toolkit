@@ -7,13 +7,51 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
-### Planeado para v2.1.0
+### Planeado para v2.2.0
 
 - [ ] Soporte para Azure SQL Managed Instance
 - [ ] Análisis de Query Store
 - [ ] Comparación de múltiples benchmarks
 - [ ] API REST (FastAPI)
 - [ ] Dashboard web en tiempo real
+- [ ] PowerShell version del offline tool
+
+## [2.1.0] - 2025-01-26
+
+### 🆕 Major Feature: Offline Benchmark Tool
+
+#### Added
+- **Standalone Offline Monitoring** (`tools/offline-benchmark/`):
+  - **monitor_sql_workload.py**: Monitor principal con checkpoint recovery
+  - **check_monitoring_status.py**: Status checker con watch mode
+  - **diagnose_monitoring.py**: Herramienta completa de diagnóstico
+  - **Generate-SQLWorkload.py**: Generador de carga sintética
+  - **INSTALL.py**: Instalador automatizado con validación
+  - **package.sh**: Script para empaquetar tool en ZIP portable
+  - Documentación completa (README, INSTALLATION, USAGE)
+
+#### Enhanced
+- **External SQL Query**: Query en archivo separado para testing independiente en SSMS
+- **Checkpoint Recovery**: Guardado automático cada 60 minutos para recuperación
+- **Enhanced Logging**: Tags [DEBUG], [OK], [FAIL] para troubleshooting
+- **Timeout Protection**: Query timeout de 30 segundos previene hangs
+- **JSON Format v2.1**: Estructura mejorada con metadata + samples
+- **import_offline_benchmark.sh**: Script actualizado soporta formato v2.1
+
+#### Fixed
+- Optimización de query < 1 segundo (single result set, 18 métricas)
+- Compatibilidad SQL Server 2012-2025
+- Cross-platform (Linux/Windows/macOS)
+
+#### Technical Debt
+- Consolidación de lógica de monitoring entre online/offline
+- Mejores prácticas del proyecto funcional SQLMonitoring_OnPremises_v2
+
+### 📖 Documentation
+- tools/offline-benchmark/README.md: Documentación completa offline tool
+- tools/offline-benchmark/docs/INSTALLATION.md: Guía detallada instalación
+- tools/offline-benchmark/docs/USAGE.md: Casos de uso avanzados
+- README.md principal actualizado con sección "Modo Offline"
 
 ## [2.0.0] - 2025-11-26
 

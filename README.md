@@ -49,6 +49,46 @@ Azure SQL Benchmark Toolkit es una suite profesional de herramientas para realiz
 - Preparar estrategias de DR/BC
 - Validar sizing post-migración
 
+## 🔌 Modo Offline: Benchmark sin Conexión Remota
+
+**¿Servidor sin acceso remoto?** El toolkit incluye una **herramienta standalone** para recolectar métricas directamente en el servidor y después importar los resultados.
+
+### ✨ Características del Offline Tool
+
+- 📦 **Portable**: Empaquetado en ZIP autocontenido
+- 🔒 **Seguro**: Sin necesidad de abrir puertos ni habilitar conexiones remotas
+- 💾 **Checkpoint Recovery**: Recuperación automática ante interrupciones
+- 📊 **Formato Compatible**: JSON importable directo al toolkit principal
+- 🛠️ **Tools Completos**: Status checker, diagnóstico, generador de carga
+
+### 🚀 Quick Start Offline
+
+```bash
+# 1. Copiar tool al servidor offline (USB, compartido de red, etc.)
+cd tools/offline-benchmark
+./package.sh  # Crea ZIP portable
+
+# 2. En el servidor offline, instalar y ejecutar
+unzip sql-workload-monitor-offline-v2.1.0.zip
+cd sql-workload-monitor-offline-v2.1.0
+python INSTALL.py
+python scripts/monitor_sql_workload.py --server . --duration 1440
+
+# 3. Copiar resultado a tu workstation
+# sql_workload_monitor.json
+
+# 4. Importar al toolkit principal
+cd /path/to/toolkit
+./tools/utils/import_offline_benchmark.sh mi-cliente sql_workload_monitor.json SQLPROD01
+
+# 5. Generar reportes (¡igual que online!)
+./tools/utils/generate_reports.sh mi-cliente
+```
+
+📖 **Documentación completa**: [tools/offline-benchmark/README.md](tools/offline-benchmark/README.md)
+
+---
+
 ## 🏗️ Estructura del Proyecto
 
 ```
@@ -61,12 +101,22 @@ azure-sql-benchmark-toolkit/
 ├── tools/                      # Herramientas del toolkit
 │   ├── monitoring/
 │   │   └── monitor_sql_workload.py    # Script Python de monitorización
+│   ├── offline-benchmark/      # 🆕 Tool standalone para offline (v2.1)
+│   │   ├── INSTALL.py
+│   │   ├── README.md
+│   │   ├── scripts/
+│   │   │   ├── monitor_sql_workload.py
+│   │   │   ├── check_monitoring_status.py
+│   │   │   ├── diagnose_monitoring.py
+│   │   │   └── Generate-SQLWorkload.py
+│   │   └── docs/
 │   ├── analysis/
 │   │   └── (futuras herramientas de análisis)
 │   └── utils/
 │       ├── create_client.sh           # Crear nuevo cliente
 │       ├── run_benchmark.sh           # Ejecutar benchmark
-│       └── generate_reports.sh        # Generar informes HTML
+│       ├── generate_reports.sh        # Generar informes HTML
+│       └── import_offline_benchmark.sh # 🆕 Importar resultados offline
 ├── templates/                  # Plantillas de informes HTML
 │   ├── benchmark-performance-report.html
 │   ├── cost-analysis-report.html
