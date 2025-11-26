@@ -287,7 +287,7 @@ pyodbc>=5.0.0
     Write-Host "Distribution Options:" -ForegroundColor Yellow
     Write-Host "  ✓ Upload to GitHub Releases" -ForegroundColor White
     Write-Host "  ✓ Copy to file share (SMB/CIFS)" -ForegroundColor White
-    Write-Host "  ✓ Email to DBAs (if < 25 MB)" -ForegroundColor White
+    Write-Host "  ✓ Teams/OneDrive/SharePoint (if < 25 MB)" -ForegroundColor White
     Write-Host "  ✓ Transfer via USB/pendrive" -ForegroundColor White
     Write-Host "  ✓ Internal package repository" -ForegroundColor White
     Write-Host ""

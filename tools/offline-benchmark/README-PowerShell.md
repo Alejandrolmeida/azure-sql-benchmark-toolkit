@@ -673,7 +673,7 @@ cd C:\SQLBenchmark\offline-benchmark
 .\scripts\Monitor-SQLWorkload.ps1 -Duration 1440 -Interval 120
 
 # 2. Transferir JSON a Linux
-# (scp, sftp, pendrive, email attachment, etc.)
+# (scp, sftp, pendrive, Teams/OneDrive, etc.)
 
 # 3. En servidor Linux (toolkit completo)
 ./tools/utils/import_offline_benchmark.sh sql_workload_monitor.json
@@ -823,7 +823,7 @@ Contents:
 Distribution Options:
   ✓ Upload to GitHub Releases
   ✓ Copy to file share (SMB/CIFS)
-  ✓ Email to DBAs (if < 25 MB)
+  ✓ Teams/OneDrive/SharePoint (if < 25 MB)
   ✓ Transfer via USB/pendrive
   ✓ Internal package repository
 
@@ -863,9 +863,9 @@ gh release create v2.2.0 releases/sql-workload-monitor-offline-powershell-v2.2.0
 Copy-Item releases/sql-workload-monitor-offline-powershell-v2.2.0.zip \\fileserver\tools\sql-monitoring\
 ```
 
-#### 3. Email (si < 25 MB)
+#### 3. Teams/OneDrive/SharePoint (si < 25 MB)
 ```powershell
-# Adjuntar ZIP + incluir hash SHA256 en body del email para verificación
+# Compartir ZIP vía herramientas corporativas + incluir hash SHA256 para verificación
 ```
 
 #### 4. Pendrive/USB
@@ -929,6 +929,10 @@ Si prefieres usar el script Bash (por ejemplo, desde WSL o Linux):
 ## 📞 Soporte
 
 **Issues:** https://github.com/Alejandrolmeida/azure-sql-benchmark-toolkit/issues
+
+**X (Twitter):** [@alejandrolmeida](https://x.com/alejandrolmeida) (DM)
+
+**LinkedIn:** [linkedin.com/in/alejandrolmeida](https://linkedin.com/in/alejandrolmeida) (DM)
 
 **Documentación completa:** [README principal](../../README.md)
 

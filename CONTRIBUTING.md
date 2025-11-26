@@ -258,7 +258,8 @@ install python, install odbc driver, clone repo
 - **Issues**: Para bugs y features concretas
 - **Discussions**: Para preguntas y ideas generales
 - **PR Comments**: Para feedback de código
-- **Email**: Para temas privados/sensibles
+- **X (Twitter)**: [@alejandrolmeida](https://x.com/alejandrolmeida) - Para temas privados (DM)
+- **LinkedIn**: [linkedin.com/in/alejandrolmeida](https://linkedin.com/in/alejandrolmeida) - Para temas privados (DM)
 
 ## Prioridades del Proyecto
 

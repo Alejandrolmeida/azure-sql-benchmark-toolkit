@@ -410,7 +410,8 @@ Este proyecto está bajo licencia MIT. Ver [LICENSE](LICENSE) para más detalles
 
 - **Issues**: [GitHub Issues](https://github.com/alejandrolmeida/azure-sql-benchmark-toolkit/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/alejandrolmeida/azure-sql-benchmark-toolkit/discussions)
-- **Email**: alejandro.almeida@example.com
+- **X (Twitter)**: [@alejandrolmeida](https://x.com/alejandrolmeida) - DM para temas privados
+- **LinkedIn**: [linkedin.com/in/alejandrolmeida](https://linkedin.com/in/alejandrolmeida) - DM para temas privados
 
 ## 🗺️ Roadmap
 

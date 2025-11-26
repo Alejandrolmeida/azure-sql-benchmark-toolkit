@@ -498,7 +498,7 @@ Ambos scripts son funcionalmente equivalentes. El paquete incluye:
 Una vez creado el ZIP, distribúyelo mediante:
 - **GitHub Releases**: Subir a releases del repositorio
 - **File Share**: Copiar a shared folder corporativo
-- **Email**: Adjuntar ZIP (si < 25 MB) + hash SHA256
+- **Transferencia de archivos**: Teams, OneDrive, SharePoint (si < 25 MB)
 - **Pendrive/USB**: Copiar directamente a medios removibles
 
 **Verificación de integridad:**
@@ -550,7 +550,8 @@ MIT License - Ver [LICENSE](../../LICENSE) en el repositorio principal.
 ## 🆘 Soporte
 
 - **Issues**: https://github.com/alejandrolmeida/azure-sql-benchmark-toolkit/issues
-- **Email**: soporte@ejemplo.com
+- **X (Twitter)**: [@alejandrolmeida](https://x.com/alejandrolmeida) (DM)
+- **LinkedIn**: [linkedin.com/in/alejandrolmeida](https://linkedin.com/in/alejandrolmeida) (DM)
 - **Documentación**: https://github.com/alejandrolmeida/azure-sql-benchmark-toolkit/wiki
 
 ---
