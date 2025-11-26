@@ -456,8 +456,69 @@ python scripts/diagnose_monitoring.py --server . > diagnostics.txt
 
 ---
 
+## 📦 Crear Paquete de Distribución
+
+Para distribuir el monitor offline a otros servidores SQL, puedes crear un paquete ZIP portable:
+
+### PowerShell (Windows - RECOMENDADO)
+
+```powershell
+# Crear paquete PowerShell-only (sin Python)
+.\Package-OfflineBenchmark.ps1
+
+# Paquete completo (PowerShell + Python)
+.\Package-OfflineBenchmark.ps1 -IncludePython
+
+# Especificar versión y output
+.\Package-OfflineBenchmark.ps1 -Version "2.2.0" -OutputDir "C:\Releases"
+```
+
+**Output:** `releases/sql-workload-monitor-offline-powershell-v2.2.0.zip`
+
+Ver documentación completa en: [README-PowerShell.md](README-PowerShell.md#-crear-paquete-de-distribución-powershell)
+
+### Bash (Linux/macOS)
+
+```bash
+# Crear paquete (Python + PowerShell)
+./package.sh 2.2.0 releases
+```
+
+**Output:** `releases/sql-workload-monitor-offline-v2.2.0.zip`
+
+Ambos scripts son funcionalmente equivalentes. El paquete incluye:
+- ✅ Scripts de monitorización (PowerShell y/o Python)
+- ✅ Instaladores automáticos
+- ✅ Documentación completa
+- ✅ Herramientas auxiliares (status checker, diagnóstico, workload generator)
+- ✅ Metadata (VERSION, PACKAGE_INFO.txt, requirements.txt)
+
+### Distribución del Paquete
+
+Una vez creado el ZIP, distribúyelo mediante:
+- **GitHub Releases**: Subir a releases del repositorio
+- **File Share**: Copiar a shared folder corporativo
+- **Email**: Adjuntar ZIP (si < 25 MB) + hash SHA256
+- **Pendrive/USB**: Copiar directamente a medios removibles
+
+**Verificación de integridad:**
+```powershell
+# PowerShell
+$hash = Get-FileHash "sql-workload-monitor-offline-v2.2.0.zip" -Algorithm SHA256
+$hash.Hash -eq "expected_hash_from_packaging_output"
+```
+
+```bash
+# Bash
+sha256sum sql-workload-monitor-offline-v2.2.0.zip
+# Comparar con hash del output del empaquetado
+```
+
+---
+
 ## 📖 Documentación Adicional
 
+- **[README-PowerShell.md](README-PowerShell.md)**: Guía completa PowerShell Edition (Windows)
 - **[INSTALLATION.md](docs/INSTALLATION.md)**: Instalación paso a paso para cada plataforma
 - **[USAGE.md](docs/USAGE.md)**: Guía de uso avanzado con ejemplos
 - **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)**: Solución detallada de problemas comunes
@@ -496,8 +557,14 @@ MIT License - Ver [LICENSE](../../LICENSE) en el repositorio principal.
 
 ## 🎯 Roadmap
 
-### v2.2.0 (Q2 2025)
-- [ ] PowerShell version equivalente
+### ✅ v2.2.0 (RELEASED - November 2024)
+- ✅ PowerShell Edition completa (Monitor, Installer, Status Checker)
+- ✅ Packaging script PowerShell nativo (Package-OfflineBenchmark.ps1)
+- ✅ Documentación Windows completa (README-PowerShell.md)
+- ✅ 100% compatible con PowerShell 5.1+ (Windows Server 2016+)
+
+### v2.3.0 (Planned - Q1 2025)
+- [ ] PowerShell workload generator equivalente
 - [ ] GUI para Windows (Tkinter)
 - [ ] Integración con Azure Blob Storage
 - [ ] Notificaciones email en completado

@@ -714,6 +714,218 @@ firefox customers/customer-xyz/reports/benchmark-performance-report.html
 
 ---
 
+## 📦 Crear Paquete de Distribución (PowerShell)
+
+Para distribuir el toolkit a servidores SQL offline, puedes crear un paquete ZIP con todo lo necesario usando el script PowerShell nativo:
+
+### Uso Básico
+
+```powershell
+# Crear paquete PowerShell-only (RECOMENDADO para Windows)
+.\Package-OfflineBenchmark.ps1
+
+# Especificar versión y directorio de salida
+.\Package-OfflineBenchmark.ps1 -Version "2.2.0" -OutputDir "C:\Releases"
+
+# Incluir también scripts Python (paquete completo)
+.\Package-OfflineBenchmark.ps1 -IncludePython
+```
+
+### Tipos de Paquetes
+
+#### 1. PowerShell-Only (Default)
+```powershell
+.\Package-OfflineBenchmark.ps1
+```
+
+**Contenido:**
+- ✅ `Monitor-SQLWorkload.ps1` - Monitor principal
+- ✅ `Check-MonitoringStatus.ps1` - Verificador estado
+- ✅ `workload-sample-query.sql` - Query SQL externa
+- ✅ `INSTALL.ps1` - Instalador automático
+- ✅ `README.md` - Documentación PowerShell
+- ✅ `docs/` - Guías adicionales (INSTALLATION, USAGE)
+
+**Salida:** `releases/sql-workload-monitor-offline-powershell-v2.2.0.zip`
+
+**Tamaño:** ~100-200 KB (solo scripts PowerShell)
+
+#### 2. Paquete Completo (PowerShell + Python)
+```powershell
+.\Package-OfflineBenchmark.ps1 -IncludePython
+```
+
+**Contenido adicional:**
+- ✅ `monitor_sql_workload.py` - Monitor Python
+- ✅ `check_monitoring_status.py` - Verificador Python
+- ✅ `diagnose_monitoring.py` - Diagnósticos Python
+- ✅ `Generate-SQLWorkload.py` - Generador carga Python
+- ✅ `INSTALL.py` - Instalador Python
+- ✅ `README-Python.md` - Documentación Python
+- ✅ `requirements.txt` - Dependencias Python
+
+**Salida:** `releases/sql-workload-monitor-offline-full-v2.2.0.zip`
+
+**Tamaño:** ~200-300 KB (PowerShell + Python)
+
+### Output del Script
+
+```powershell
+======================================================================
+  SQL SERVER WORKLOAD MONITOR - PACKAGING (POWERSHELL)
+======================================================================
+
+Version:     2.2.0
+Output:      releases\sql-workload-monitor-offline-powershell-v2.2.0.zip
+Include:     PowerShell only
+
+[16:30:15] [1/8] Creating package structure...
+  ✓ Directory structure created
+
+[16:30:15] [2/8] Copying PowerShell scripts...
+  ✓ Monitor-SQLWorkload.ps1
+  ✓ Check-MonitoringStatus.ps1
+  ✓ workload-sample-query.sql
+
+[16:30:15] [3/8] Copying installer...
+  ✓ INSTALL.ps1
+
+[16:30:15] [4/8] Copying documentation...
+  ✓ README.md
+
+[16:30:15] [5/8] Creating VERSION file...
+  ✓ VERSION
+
+[16:30:15] [6/8] Creating package info...
+  ✓ PACKAGE_INFO.txt
+
+[16:30:15] [7/8] Creating ZIP package...
+  ✓ ZIP created
+
+[16:30:16] [8/8] Calculating integrity hash...
+  ✓ SHA256 calculated
+
+======================================================================
+  PACKAGING COMPLETE
+======================================================================
+
+Package:     sql-workload-monitor-offline-powershell-v2.2.0.zip
+Location:    releases\
+Size:        0.15 MB (156789 bytes)
+
+Contents:
+  scripts/Monitor-SQLWorkload.ps1 (45.2 KB)
+  scripts/Check-MonitoringStatus.ps1 (12.3 KB)
+  INSTALL.ps1 (28.4 KB)
+  README.md (65.1 KB)
+  ... and 8 more files
+
+Distribution Options:
+  ✓ Upload to GitHub Releases
+  ✓ Copy to file share (SMB/CIFS)
+  ✓ Email to DBAs (if < 25 MB)
+  ✓ Transfer via USB/pendrive
+  ✓ Internal package repository
+
+Integrity Check:
+  Algorithm: SHA256
+  Hash:      a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
+
+  PowerShell verification:
+  $hash = Get-FileHash 'releases\...-v2.2.0.zip' -Algorithm SHA256
+  $hash.Hash -eq 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6'
+
+Next Steps:
+  1. Test package on clean Windows Server
+  2. Verify INSTALL.ps1 runs successfully
+  3. Run Monitor-SQLWorkload.ps1 test (5 min)
+  4. Distribute to target SQL Servers
+
+✓ Package ready for distribution!
+```
+
+### Distribución del Paquete
+
+Una vez creado el ZIP, puedes distribuirlo de varias formas:
+
+#### 1. GitHub Releases (Recomendado)
+```powershell
+# Subir manualmente a:
+# https://github.com/Alejandrolmeida/azure-sql-benchmark-toolkit/releases
+
+# O usando GitHub CLI:
+gh release create v2.2.0 releases/sql-workload-monitor-offline-powershell-v2.2.0.zip --title "Offline Monitor v2.2.0 (PowerShell)" --notes "PowerShell Edition for Windows SQL Servers"
+```
+
+#### 2. File Share Corporativo
+```powershell
+# Copiar a shared folder
+Copy-Item releases/sql-workload-monitor-offline-powershell-v2.2.0.zip \\fileserver\tools\sql-monitoring\
+```
+
+#### 3. Email (si < 25 MB)
+```powershell
+# Adjuntar ZIP + incluir hash SHA256 en body del email para verificación
+```
+
+#### 4. Pendrive/USB
+```powershell
+# Copiar directamente a USB
+Copy-Item releases/sql-workload-monitor-offline-powershell-v2.2.0.zip E:\
+```
+
+### Verificación de Integridad
+
+En el servidor de destino, verificar que el paquete no se corrompió:
+
+```powershell
+# Calcular hash del ZIP descargado
+$hash = Get-FileHash "sql-workload-monitor-offline-powershell-v2.2.0.zip" -Algorithm SHA256
+
+# Comparar con hash original (del output del empaquetado)
+$expectedHash = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+
+if ($hash.Hash -eq $expectedHash) {
+    Write-Host "✓ Package integrity verified" -ForegroundColor Green
+} else {
+    Write-Host "✗ Package corrupted! Do not use." -ForegroundColor Red
+}
+```
+
+### Instalación del Paquete (Servidor Destino)
+
+```powershell
+# 1. Descomprimir en servidor SQL
+Expand-Archive -Path sql-workload-monitor-offline-powershell-v2.2.0.zip -DestinationPath C:\SQLBenchmark
+
+# 2. Navegar
+cd C:\SQLBenchmark\sql-workload-monitor-offline-powershell-v2.2.0
+
+# 3. Revisar PACKAGE_INFO.txt
+notepad PACKAGE_INFO.txt
+
+# 4. Ejecutar instalador
+.\INSTALL.ps1
+
+# 5. Monitor (ejemplo: 15 min)
+.\scripts\Monitor-SQLWorkload.ps1 -Duration 15 -Interval 60
+```
+
+### Alternativa: Packaging con Bash (Linux/macOS)
+
+Si prefieres usar el script Bash (por ejemplo, desde WSL o Linux):
+
+```bash
+# Crear paquete
+./package.sh 2.2.0 releases
+
+# Output: releases/sql-workload-monitor-offline-v2.2.0.zip
+```
+
+**Nota:** El script Bash (`package.sh`) y el PowerShell (`Package-OfflineBenchmark.ps1`) son funcionalmente equivalentes. Usa el que prefieras según tu plataforma.
+
+---
+
 ## 📞 Soporte
 
 **Issues:** https://github.com/Alejandrolmeida/azure-sql-benchmark-toolkit/issues
