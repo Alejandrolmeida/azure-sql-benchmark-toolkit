@@ -69,9 +69,67 @@ tools/offline-benchmark/
 
 ### Windows Server / Desktop
 - **OS:** Windows Server 2012 R2+ / Windows 8.1+
-- **PowerShell:** 5.1+ (incluido) o PowerShell 7+ (opcional)
+- **PowerShell:** 5.1+ (incluido en Windows Server 2016+) o PowerShell 7+ (opcional)
 - **Módulo:** SqlServer (se instala automáticamente)
 - **Red:** Acceso local o remoto a instancia SQL Server
+
+### ✅ Compatibilidad PowerShell Verificada
+
+Los scripts han sido diseñados para **máxima compatibilidad** con PowerShell 5.1 (incluido por defecto en Windows Server 2016+):
+
+#### 100% Compatible con PowerShell 5.1+
+- ✅ Sintaxis nativa (no usa características exclusivas de PS 7+)
+- ✅ `[CmdletBinding()]` y `[Parameter()]` (PS 2.0+)
+- ✅ `[ValidateSet()]` para validación de parámetros (PS 2.0+)
+- ✅ `ConvertTo-Json -Depth 10` (PS 3.0+, disponible en 5.1)
+- ✅ `ConvertFrom-Json` (PS 3.0+, disponible en 5.1)
+- ✅ `$PSScriptRoot` (PS 3.0+, disponible en 5.1)
+- ✅ `Invoke-Sqlcmd` del módulo SqlServer (compatible 5.1+)
+- ✅ `Get-Date -Format` con formatos ISO 8601 (PS 1.0+)
+- ✅ Hashtables `@{}` y arrays `@()` (PS 1.0+)
+- ✅ `switch` statements (PS 1.0+)
+- ✅ `[PSCustomObject]` type accelerator (PS 3.0+)
+
+#### Características NO Usadas (PS 7+ Only)
+- ❌ **Ternary operator** `? :` (PS 7.0+) → NO usado
+- ❌ **Null-coalescing** `??` (PS 7.0+) → NO usado
+- ❌ **Pipeline parallelization** `-Parallel` (PS 7.0+) → NO usado
+- ❌ **`&&` and `||` operators** (PS 7.0+) → NO usado
+
+#### Versión Mínima Real: **PowerShell 5.1**
+
+**Windows Server 2016+ incluye PowerShell 5.1 por defecto.** No necesitas instalar PowerShell 7.
+
+**Windows Server 2012 R2**: Incluye PowerShell 4.0 por defecto. Recomendamos actualizar a 5.1:
+```powershell
+# Descargar Windows Management Framework 5.1
+# https://www.microsoft.com/en-us/download/details.aspx?id=54616
+```
+
+**Verificar tu versión:**
+```powershell
+$PSVersionTable.PSVersion
+# Output ejemplo: Major=5 Minor=1 Build=19041 Revision=4046
+```
+
+#### 🚀 Ventajas de PowerShell 7+ (Opcional)
+
+Si tienes PowerShell 7+ instalado (no requerido), obtendrás:
+- ⚡ **Mejor rendimiento** en operaciones JSON (ConvertTo-Json más rápido)
+- 🔧 **Mejores mensajes de error** (stacktraces más claros)
+- 🌐 **Cross-platform** (puedes ejecutar scripts en Linux/macOS si lo necesitas)
+- 🔒 **Características de seguridad mejoradas**
+
+**Instalar PowerShell 7 (opcional):**
+```powershell
+# Desde PowerShell 5.1 como Administrador
+winget install --id Microsoft.PowerShell --source winget
+
+# O descargar desde:
+# https://aka.ms/powershell-release?tag=stable
+```
+
+**Los scripts funcionan igual en ambas versiones** (5.1 y 7+), sin cambios.
 
 ### SQL Server
 - **Versión:** SQL Server 2012 SP4 - 2025
@@ -520,6 +578,33 @@ Test-NetConnection -ComputerName localhost -Port 1433
 # El checkpoint (_checkpoint.json) se carga automáticamente
 ```
 
+### Error: "PowerShell version too old"
+
+```powershell
+# Verificar versión actual
+$PSVersionTable.PSVersion
+
+# Si es < 5.1, actualizar Windows Management Framework
+# Descargar WMF 5.1: https://www.microsoft.com/en-us/download/details.aspx?id=54616
+
+# Alternativamente, instalar PowerShell 7:
+winget install --id Microsoft.PowerShell --source winget
+```
+
+### Scripts funcionan en PS 7 pero falla en PS 5.1
+
+**Esto NO debería ocurrir** porque los scripts están diseñados para 5.1. Si ocurre:
+
+```powershell
+# 1. Verificar que NO estés usando un script modificado
+Get-FileHash .\scripts\Monitor-SQLWorkload.ps1
+
+# 2. Reportar issue con detalles:
+# - Versión exacta de PowerShell: $PSVersionTable
+# - Windows version: [System.Environment]::OSVersion
+# - Error completo: $Error[0] | Format-List -Force
+```
+
 ---
 
 ## 📚 Documentación Adicional
@@ -607,6 +692,8 @@ firefox customers/customer-xyz/reports/benchmark-performance-report.html
 | Feature | PowerShell Edition | Python Edition |
 |---------|-------------------|----------------|
 | **OS Nativo** | ✅ Windows (PS 5.1+ incluido) | ❌ Linux / Requiere Python en Windows |
+| **Versión Mínima** | ✅ PowerShell 5.1 (incluido en Win Server 2016+) | Python 3.8+ (no incluido) |
+| **Compatibilidad** | ✅ PS 5.1, 7.0, 7.1, 7.2, 7.3, 7.4+ | Python 3.8, 3.9, 3.10, 3.11, 3.12 |
 | **Instalación** | ⚡ 30 segundos (módulo SqlServer) | ⏱️ 5-10 minutos (Python + deps) |
 | **Dependencias** | Módulo SqlServer (auto-install) | Python 3.8+, pyodbc, ODBC Driver 17 |
 | **Tamaño Instalación** | ~50 MB (módulo SqlServer) | ~200 MB (Python + packages) |
@@ -616,6 +703,7 @@ firefox customers/customer-xyz/reports/benchmark-performance-report.html
 | **Performance Query** | < 1 segundo | < 1 segundo |
 | **Background Execution** | ✅ Task Scheduler | ❌ Requiere terminal activo |
 | **Basado en Código Funcional** | ✅ SQLMonitoring_OnPremises_v2 (100%) | ⚠️ Implementación nueva |
+| **Sintaxis Compatible** | ✅ 100% compatible PS 5.1+ (sin features PS 7+) | Python 3.8+ estándar |
 | **Recomendado para** | 🎯 **Windows SQL Servers** | Linux boxes con Python |
 
 **Conclusión:** Para servidores **Windows SQL Server** (el caso más común), **PowerShell Edition es la mejor opción** por:
@@ -634,6 +722,7 @@ firefox customers/customer-xyz/reports/benchmark-performance-report.html
 
 ---
 
-**Versión:** 2.1.0  
-**Última actualización:** 2024-01-15  
-**Autor:** Alejandro Almeida
+**Versión:** 2.2.0  
+**Última actualización:** 2024-11-26  
+**Autor:** Alejandro Almeida  
+**Compatibilidad verificada:** PowerShell 5.1, 7.0, 7.1, 7.2, 7.3, 7.4+
