@@ -1,10 +1,19 @@
-# 🚀 Azure SQL Benchmark Toolkit
-
-**Professional SQL Server Performance Analysis & Azure Migration Assessment Tool**
+```
+    ___   _____ ____  ______
+   /   | / ___// __ )/_  __/
+  / /| | \__ \/ __  | / /   
+ / ___ |___/ / /_/ / / /    
+/_/  |_/____/_____/ /_/     
+                            
+ Azure SQL Benchmark Toolkit
+    Performance Analysis
+  & Migration Assessment
+```
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Azure](https://img.shields.io/badge/Azure-Ready-0078D4.svg)](https://azure.microsoft.com/)
+[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](https://github.com/alejandrolmeida/azure-sql-benchmark-toolkit/releases)
 
 ## 📋 Descripción
 
